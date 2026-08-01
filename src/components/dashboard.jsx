@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { userContext } from '../context/usercontext';
+import { API_URLS, authFetch } from '../utils/api';
 
 const StatCard = ({ title, value, trend }) => (
   <Card sx={{ height: '100%' }}>
@@ -87,7 +88,7 @@ const Dashboard = () => {
   // ];
 
   const fetch_stats_data = async() =>{
-    let res = await fetch(`http://127.0.0.1:5000/get_data_statcard/${User.u_id}`)
+    let res = await authFetch(`${API_URLS.grievance}/get_data_statcard/${User.u_id}`, User.token)
     if (res.ok) {
       let stats_data = await res.json()
       setstats(stats_data)
@@ -95,7 +96,7 @@ const Dashboard = () => {
   }
 
   const fetch_recent_acivity_data = async () =>{
-    let res = await fetch(`http://127.0.0.1:5000/grievance/kpi_report/${User.u_id}`)
+    let res = await authFetch(`${API_URLS.grievance}/kpi_report/${User.u_id}`, User.token)
     if(res.ok){
       let data = await res.json()
       setacivity(data)

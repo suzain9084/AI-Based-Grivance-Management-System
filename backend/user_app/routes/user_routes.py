@@ -1,28 +1,26 @@
-from flask import Blueprint,request,jsonify
+from flask import Blueprint, request
+
+from shared.auth.decorators import user_required, require_self_or_admin
 from user_app.controller.user_controller import UserController
 
-user_bp = Blueprint('user_bp',__name__)
+user_bp = Blueprint("user_bp", __name__)
 
-@user_bp.route('/signup', methods=['POST'])
+
+@user_bp.route("/signup", methods=["POST"])
 def signup():
-    data = request.json
-    return UserController.signup(data)
+    return UserController.signup(request.json)
 
-@user_bp.route('/login', methods=['POST'])
+
+@user_bp.route("/login", methods=["POST"])
 def login():
-    data = request.json
-    return UserController.login(data)
+    return UserController.login(request.json)
 
-@user_bp.route("/update",methods=['PUT'])
-def udate():
+
+@user_bp.route("/update", methods=["PUT"])
+@user_required
+def update():
     data = request.json
+    forbidden = require_self_or_admin(data.get("u_id"))
+    if forbidden:
+        return forbidden
     return UserController.update(data)
-
-@user_bp.route("/get_data_statcard/<int:u_id>",methods=['GET'])
-def get_stat_card_data(u_id):
-    return UserController.get_state_card(u_id)
-
-@user_bp.route('/grievance/kpi_report/<int:u_id>', methods=['GET'])
-def grievance_kpi_report(u_id):
-    return UserController.grievance_kpi_report(u_id)
-

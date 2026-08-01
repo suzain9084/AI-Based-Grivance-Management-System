@@ -1,12 +1,15 @@
 from flask import Flask
 from shared.utils.db_utils import db
 from shared.utils.db_utils import migrate
-from config.config import connection_string
+import dotenv
+import os
+dotenv.load_dotenv()
 
+CONNECTION_STRING = os.getenv('CONNECTION_STRING')
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
+app.config['SQLALCHEMY_DATABASE_URI'] = CONNECTION_STRING
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 

@@ -39,6 +39,7 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { userContext } from '../context/usercontext';
+import { API_URLS, authFetch } from '../utils/api';
 
 const departments = [
   'All Departments',
@@ -255,7 +256,7 @@ const AdminComplain = () => {
   };
 
   const fetch_complains = async() => {
-    let res = await fetch("http://127.0.0.1:5002/get_all_grievance")
+    let res = await authFetch(`${API_URLS.admin}/get_all_grievance`, User.token)
     if(res.ok){
       let data = await res.json()
       setmockComplaints(data)

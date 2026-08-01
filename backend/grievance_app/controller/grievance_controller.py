@@ -1,77 +1,115 @@
+from datetime import datetime
+from io import BytesIO
+
+from flask import g
+
+from ML_Models.MLmodel import MLmodelsClass
 from grievance_app.service.grievance_service import GrievanceService
 from grievance_app.view.grievance_view import GrievanceView
-from ML_Models.MLmodel import MLmodelsClass
 from user_app.view.user_view import UserView
-from io import BytesIO
-import datetime
 
 commitee_name_to_c_id = {
-    "examination" : 1, 
-    "infrastructure": 2, 
-    "general facility" : 3,
-    "research facility" : 4,
-    "journals/literature" : 5,
-    "fellowship" : 6
+    "examination": 1,
+    "infrastructure": 2,
+    "general facility": 3,
+    "research facility": 4,
+    "journals/literature": 5,
+    "fellowship": 6,
 }
 
 language_to_code = {
-    "hindi" : "hi-IN",
-    "english" : "en-IN",
-    "marathi": 'mr-IN',
-    "gujarati": "gu-IN"
+    "hindi": "hi-IN",
+    "english": "en-IN",
+    "marathi": "mr-IN",
+    "gujarati": "gu-IN",
 }
+
 
 class GrievanceController:
     @staticmethod
-    def add_grievance(data,file):
-        u_id = data["u_id"]
-        language = data['language']
-        desc = data['description']
-        comittee = data['comittee']
+    def add_grievance(data, file):
+        u_id = int(data["u_id"])
+        if str(g.current_user.get("sub")) != str(u_id):
+            return UserView.render_error("Forbidden"), 403
+
+        language = data["language"]
+        desc = data["description"]
+        comittee = data["comittee"]
 
         if data["comittee"] not in commitee_name_to_c_id:
-            comittee = MLmodelsClass.grievance_classification(desc,language)
-        
-        c_id = commitee_name_to_c_id[comittee]
-        title = data['title']
-        audio = file['blob'].read()
+            comittee = MLmodelsClass.grievance_classification(desc, language)
 
-        res, grievance = GrievanceService.add_grievance(u_id,c_id,desc,title,audio,language)
+        c_id = commitee_name_to_c_id[comittee]
+        title = data["title"]
+        audio = file["blob"].read()
+
+        res, grievance = GrievanceService.add_grievance(
+            u_id, c_id, desc, title, audio, language
+        )
         if res:
             return GrievanceView.render_grievance(grievance)
-        else:
-            return UserView.render_error(grievance)
-        
+        return UserView.render_error(grievance), 500
+
     @staticmethod
-    def convertToText(file,lan):
+    def convertToText(file, lan):
         try:
             buffer = BytesIO(file.read())
-            res = MLmodelsClass.speechTotext(buffer,language_to_code[lan])
-            if res['success']:
-                return GrievanceView.render_text(res['text']),200
-            else:
-                print(res['error'])
-                return UserView.render_error(res['error']),500
+            res = MLmodelsClass.speechTotext(buffer, language_to_code[lan])
+            if res["success"]:
+                return GrievanceView.render_text(res["text"]), 200
+            return UserView.render_error(res["error"]), 500
         except Exception as error:
-            print(error)
-            return error
+            return UserView.render_error(str(error)), 500
+
     @staticmethod
     def get_all_grievance(user_id):
-        res,grievances = GrievanceService.get_all_grievance(user_id)
+        res, grievances = GrievanceService.get_all_grievance(user_id)
         if res:
-            return GrievanceView.render_grievances(grievances),200
-        else:
-            return UserView.render_error(grievances),500
+            return GrievanceView.render_grievances(grievances), 200
+        return UserView.render_error(grievances), 500
+
     @staticmethod
     def get_audio(g_id):
-        res,audio = GrievanceService.get_audio(g_id)
+        res, result = GrievanceService.get_audio(g_id)
         if res:
-            return GrievanceView.render_audio(audio),200
+            grievance = result
+            if not g.current_user.get("isAdmin") and str(g.current_user.get("sub")) != str(
+                grievance.u_id
+            ):
+                return UserView.render_error("Forbidden"), 403
+            return GrievanceView.render_audio(grievance.audio), 200
         if res is None:
-            return UserView.render_error(audio),404
+            return UserView.render_error(result), 404
+        return UserView.render_error(result), 500
+
+    @staticmethod
+    def get_state_card(u_id):
+        now = datetime.utcnow()
+        this_month = now.month
+        this_year = now.year
+
+        if this_month == 1:
+            last_month = 12
+            last_month_year = this_year - 1
         else:
-            return UserView.render_error(audio),500
+            last_month = this_month - 1
+            last_month_year = this_year
 
+        res, this_month_counts, last_month_counts = GrievanceService.get_state_card(
+            u_id, this_month, this_year, last_month, last_month_year
+        )
+        if res:
+            return GrievanceView.render_stat_card(this_month_counts, last_month_counts), 200
+        return UserView.render_error(this_month_counts), 500
 
-
-        
+    @staticmethod
+    def grievance_kpi_report(u_id):
+        res, resolution_rate, avg_response_time_seconds = GrievanceService.grievance_kpi_report(
+            u_id
+        )
+        if res:
+            return (
+                GrievanceView.render_kpi_report(resolution_rate, avg_response_time_seconds),
+                200,
+            )
+        return UserView.render_error(resolution_rate), 500

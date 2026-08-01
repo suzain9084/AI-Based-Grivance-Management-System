@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 
 import { userContext } from "../context/usercontext.jsx"
+import { API_URLS, authFetch } from "../utils/api.js"
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -48,7 +49,7 @@ const Profile = () => {
         email: email,
         phone: phone
       }
-      let res = await fetch("http://127.0.0.1:5000/update", {
+      let res = await authFetch(`${API_URLS.user}/update`, User.token, {
         method: 'PUT',
         headers: {
           "Content-Type": "application/json",

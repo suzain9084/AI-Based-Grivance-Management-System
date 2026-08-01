@@ -40,16 +40,16 @@ class AdminService:
             return False, str(error)
 
     @staticmethod
-    def update(full_name, email, phone, u_id):
+    def update(full_name, email, phone, admin_id):
         try:
-            user = Admin.query.filter_by(u_id=u_id).first()
-            if user:
-                user.full_name = full_name
-                user.email = email
-                user.phone = phone
+            admin = Admin.query.filter_by(admin_id=admin_id).first()
+            if admin:
+                admin.full_name = full_name
+                admin.email = email
+                admin.phone = phone
                 db.session.commit()
-                return True, user
-            return False, "User not Found"
+                return True, admin
+            return False, "Admin not found"
         except Exception as error:
             return False, str(error)
 

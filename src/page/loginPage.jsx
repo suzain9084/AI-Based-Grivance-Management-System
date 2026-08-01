@@ -3,6 +3,7 @@ import '../css/loginPage.css';
 import { useForm } from 'react-hook-form';
 import { userContext } from '../context/usercontext';
 import { useNavigate } from 'react-router-dom';
+import { API_URLS } from '../utils/api';
 
 
 export default function AuthPanel() {
@@ -26,7 +27,7 @@ export default function AuthPanel() {
   const onSignUpSubmit = useCallback(async (data) => {
     try {
       console.log('SignUp Data:', data);
-      const response = await fetch("http://127.0.0.1:5000/signup", {
+      const response = await fetch(`${API_URLS.user}/signup`, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
@@ -40,8 +41,7 @@ export default function AuthPanel() {
         alert("Student ID or Email already exists");
       } else if (response.status === 201) {
         alert("Sign up successful");
-        const { full_name, department, year, phone, email, student_id } = resData
-        setUser({ full_name, phone, email, student_id, department, year });
+        setUser(resData);
         navigate("/");
       } else {
         alert("Internal Server Error, Try again later.");
@@ -57,7 +57,7 @@ export default function AuthPanel() {
     try {
       let response
       if (data.isAdmin) {
-        response = await fetch("http://127.0.0.1:5002/login", {
+        response = await fetch(`${API_URLS.admin}/login`, {
           method: 'POST',
           headers: {
             "Content-Type": "application/json",
@@ -65,7 +65,7 @@ export default function AuthPanel() {
           body: JSON.stringify(data)
         });
       } else {
-        response = await fetch("http://127.0.0.1:5000/login", {
+        response = await fetch(`${API_URLS.user}/login`, {
           method: 'POST',
           headers: {
             "Content-Type": "application/json",

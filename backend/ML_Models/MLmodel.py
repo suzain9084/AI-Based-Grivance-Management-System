@@ -1,9 +1,14 @@
 import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
 import speech_recognition as sr
-import google.generativeai as genai  
+import google.generativeai as genai
 from transformers import pipeline
 
+from config.settings import GEMINI_API_KEY, init_settings
+
+init_settings()
 
 class MLmodelsClass:
     @staticmethod
@@ -25,7 +30,7 @@ class MLmodelsClass:
     @staticmethod
     def language_translator(text):
         try:
-            genai.configure(api_key="AIzaSyBUJ92pSMaT_gc-ukOFf4QKTOxWCcwHbOE")
+            genai.configure(api_key=GEMINI_API_KEY)
             model = genai.GenerativeModel(model_name="gemini-1.5-flash")
             response = model.generate_content(f"Translate the following text into English: '{text}'. Only provide the Hindi translation, nothing else.")
             return True, response.text
@@ -38,7 +43,7 @@ class MLmodelsClass:
             classifier = pipeline(
                 "zero-shot-classification",
                 model="facebook/bart-large-mnli",
-                framework="pt" 
+                framework="pt"
             )
             labels = ["examination", "infrastructure", "general facility","research facility","journals/literature","fellowship"]
             if language != 'english':

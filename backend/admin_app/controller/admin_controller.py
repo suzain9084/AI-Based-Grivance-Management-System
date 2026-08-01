@@ -1,58 +1,58 @@
-from admin_app.services.admin_service import AdminService
+from shared.auth.jwt_utils import create_access_token
 from shared.models.admin_model import Admin
+from admin_app.services.admin_service import AdminService
 from admin_app.view.admin_view import AdminView
-from datetime import datetime
 from user_app.view.user_view import UserView
+
 
 class AdminController:
     @staticmethod
     def signup(data):
-        if Admin.query.filter_by(admin_id=data['admin_id']).first() or Admin.query.filter_by(email=data['email']).first():
+        if Admin.query.filter_by(admin_id=data["admin_id"]).first() or Admin.query.filter_by(
+            email=data["email"]
+        ).first():
             return AdminView.render_error("Admin ID or Email already exists"), 400
-        res, user = AdminService.signup(data)
+
+        res, admin = AdminService.signup(data)
         if res:
-            return AdminView.renderAdmin(user), 201
-        else:
-            return AdminView.render_error(user), 500
+            return AdminView.renderAdmin(admin), 201
+        return AdminView.render_error(admin), 500
 
     @staticmethod
     def login(data):
         res, admin = AdminService.login(data)
         if res:
-            return AdminView.renderAdmin(admin), 200
-        else:
-            return AdminView.render_error(admin), 401
-        
+            token = create_access_token(admin.admin_id, role="admin", is_admin=True)
+            return AdminView.renderAdmin(admin, token=token), 200
+        return AdminView.render_error(admin), 401
+
     @staticmethod
     def update(data):
-        full_name = data['full_name']
-        email = data['email']
-        phone = data['phone']
-        u_id = data['u_id']
-        res,user = AdminService.update(full_name,email,phone,u_id)
+        res, admin = AdminService.update(
+            data["full_name"], data["email"], data["phone"], data["admin_id"]
+        )
         if res:
-            return AdminView.renderAdmin(user),200
-        else:
-            return AdminView.render_error(user),500
-    
+            return AdminView.renderAdmin(admin), 200
+        return AdminView.render_error(admin), 500
+
     @staticmethod
-    def get_grievance_by_category(status,time_range):
-        res, data = AdminService.get_grievance_by_category(status,time_range)
+    def get_grievance_by_category(status, time_range):
+        res, data = AdminService.get_grievance_by_category(status, time_range)
         if res:
-            return AdminView.render_category_wise_grievance(data),200
-        else:
-            return AdminView.render_error(data),500
+            return AdminView.render_category_wise_grievance(data), 200
+        return AdminView.render_error(data), 500
 
     @staticmethod
     def get_all_grievance():
-        res,data = AdminService.get_all_grievance()
+        res, data = AdminService.get_all_grievance()
         if res:
             return AdminView.render_grievances(data)
-        else:
-            return AdminView.render_error(data)
-        
+        return AdminView.render_error(data), 500
+
     @staticmethod
     def get_stat_card_data():
+        from datetime import datetime
+
         now = datetime.utcnow()
         this_month = now.month
         this_year = now.year
@@ -64,16 +64,16 @@ class AdminController:
             last_month = this_month - 1
             last_month_year = this_year
 
-        res,this_month_counts,last_month_counts = AdminService.get_state_card(this_month,this_year,last_month,last_month_year)
+        res, this_month_counts, last_month_counts = AdminService.get_state_card(
+            this_month, this_year, last_month, last_month_year
+        )
         if res:
-            return UserView.render_stat_card(this_month_counts,last_month_counts),200
-        else:
-            return AdminView.render_error(this_month_counts),500
-        
+            return AdminView.render_stat_card(this_month_counts, last_month_counts), 200
+        return AdminView.render_error(this_month_counts), 500
+
     @staticmethod
     def get_line_graph_data(time_range):
-        res,data = AdminService.get_line_graph_data(time_range)
+        res, data = AdminService.get_line_graph_data(time_range)
         if res:
-            return AdminView.render_line_graph_data(time_range,data),200
-        else:
-            return AdminView.render_error(data),500
+            return AdminView.render_line_graph_data(time_range, data), 200
+        return AdminView.render_error(data), 500
