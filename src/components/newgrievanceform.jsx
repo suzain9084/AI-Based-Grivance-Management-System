@@ -9,7 +9,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import { userContext } from '../context/usercontext';
 import { useNavigate } from 'react-router-dom';
-import { API_URLS, authFetch } from '../utils/api';
+import { apiUrl, authFetch } from '../utils/api';
 
 
 const NewGrievanceForm = () => {
@@ -38,7 +38,7 @@ const NewGrievanceForm = () => {
     formdata.append('comittee', assignedTo)
     formdata.append('u_id', User.u_id)
     formdata.append("language", language)
-    let res = await authFetch(`${API_URLS.grievance}/add_grievance`, User.token, {
+    let res = await authFetch(apiUrl("/api/grievances/add_grievance"), User.token, {
       method: "POST",
       body: formdata
     })
@@ -77,7 +77,7 @@ const NewGrievanceForm = () => {
       formdata.append("language", language)
 
       setIsloading(true)
-      let res = await authFetch(`${API_URLS.grievance}/speechToText`, User.token, {
+      let res = await authFetch(apiUrl("/api/grievances/speechToText"), User.token, {
         method: 'POST',
         body: formdata
       })

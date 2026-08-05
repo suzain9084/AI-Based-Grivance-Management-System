@@ -5,7 +5,7 @@ import refreshIcon from "/refreash.svg"
 import filterIcon from "/filter.svg"
 import { useContext } from 'react'
 import { userContext } from '../context/usercontext'
-import { API_URLS, authFetch } from '../utils/api'
+import { apiUrl, authFetch } from '../utils/api'
 import {
   Box,
   Paper,
@@ -33,7 +33,7 @@ const Grienvancelist = () => {
   const [openDialog, setOpenDialog] = useState(false)
 
   const get_all_grievance = async () => {
-    let res = await authFetch(`${API_URLS.grievance}/get_all_grievance/${User.u_id}`, User.token)
+    let res = await authFetch(apiUrl(`/api/grievances/get_all_grievance/${User.u_id}`), User.token)
     if (res.ok) {
       res = await res.json()
       setGrievances(res)

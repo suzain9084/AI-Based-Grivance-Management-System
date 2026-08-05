@@ -17,6 +17,7 @@ ctranslate2 ==4.6.0
 fanstatic==1.5
 faster-whisper==1.1.1
 filelock==3.18.0
+Flask-Limiter==3.12
 Flask==3.0.3
 flask-cors==5.0.1
 Flask-Migrate==4.0.7

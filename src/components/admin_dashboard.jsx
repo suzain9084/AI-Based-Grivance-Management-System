@@ -34,7 +34,7 @@ import {
   Bar,
 } from 'recharts';
 import { userContext } from '../context/usercontext';
-import { API_URLS, authFetch } from '../utils/api';
+import { apiUrl, authFetch } from '../utils/api';
 
 const StatCard = ({ title, value, trend }) => (
   <Card sx={{ height: '100%' }}>
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
   const [monthlyData, setmonthlyData] = useState([])
 
   const fetch_bar_plot_data = async () => {
-    let res = await authFetch(`${API_URLS.admin}/grievanceCategory/${reportType}/${timeRange}`, User.token)
+    let res = await authFetch(apiUrl(`/api/admin/grievanceCategory/${reportType}/${timeRange}`), User.token)
     if (res.ok) {
       let data = await res.json()
       setcategoryData(data)
@@ -96,7 +96,7 @@ const AdminDashboard = () => {
   }
 
   const fetch_state_card_data = async () => {
-    let res = await authFetch(`${API_URLS.admin}/get_data_statcard`, User.token)
+    let res = await authFetch(apiUrl("/api/admin/get_data_statcard"), User.token)
     if (res.ok) {
       let data = await res.json()
       setstateCard(data)
@@ -104,7 +104,7 @@ const AdminDashboard = () => {
   }
 
   const fetch_monthly_data = async() => {
-    let res = await authFetch(`${API_URLS.admin}/get_line_graph_data/${timeRange}`, User.token)
+    let res = await authFetch(apiUrl(`/api/admin/get_line_graph_data/${timeRange}`), User.token)
     if (res.ok) {
       let data = await res.json()
       setmonthlyData(data)

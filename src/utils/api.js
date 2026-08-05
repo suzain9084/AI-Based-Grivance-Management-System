@@ -1,8 +1,10 @@
-export const API_URLS = {
-  user: import.meta.env.VITE_USER_API_URL || "http://127.0.0.1:5000",
-  grievance: import.meta.env.VITE_GRIEVANCE_API_URL || "http://127.0.0.1:5001",
-  admin: import.meta.env.VITE_ADMIN_API_URL || "http://127.0.0.1:5002",
-};
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8080";
+
+export function apiUrl(path) {
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
 
 export function authHeaders(token, extraHeaders = {}) {
   return {
