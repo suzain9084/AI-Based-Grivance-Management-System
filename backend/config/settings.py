@@ -5,15 +5,17 @@ from dotenv import load_dotenv
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
+# Optional per-service DB overrides in backend/.env; falls back to CONNECTION_STRING.
+SERVICE_CONNECTION_ENV = {
+    "user_app": "USER_CONNECTION_STRING",
+    "grievance_app": "GRIEVANCE_CONNECTION_STRING",
+    "admin_app": "ADMIN_CONNECTION_STRING",
+}
 
-def load_service_env(service_name=None):
-    """Load shared env first, then optional service-specific overrides."""
+
+def load_service_env():
+    """Load all secrets from backend/.env only."""
     load_dotenv(BACKEND_DIR / ".env")
-    load_dotenv(BACKEND_DIR / "shared" / ".env", override=True)
-    if service_name:
-        load_dotenv(BACKEND_DIR / service_name / ".env", override=True)
-    if service_name != "api_gateway":
-        load_dotenv(BACKEND_DIR / "ML_Models" / ".env", override=True)
 
 
 CONNECTION_STRING = None
@@ -40,9 +42,13 @@ def init_settings(service_name=None):
     global USER_SERVICE_URL, GRIEVANCE_SERVICE_URL, ADMIN_SERVICE_URL
     global FLASK_DEBUG, GEMINI_API_KEY
 
-    load_service_env(service_name)
+    load_service_env()
 
-    CONNECTION_STRING = os.getenv("CONNECTION_STRING")
+    conn_env = SERVICE_CONNECTION_ENV.get(service_name)
+    if conn_env:
+        CONNECTION_STRING = os.getenv(conn_env) or os.getenv("CONNECTION_STRING")
+    else:
+        CONNECTION_STRING = os.getenv("CONNECTION_STRING")
     JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
     JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
     USER_SERVICE_PORT = int(os.getenv("USER_SERVICE_PORT", "5000"))

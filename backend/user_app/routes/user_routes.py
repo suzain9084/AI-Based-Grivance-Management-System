@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 
-from shared.auth.decorators import user_required, require_self_or_admin
+from shared.auth.decorators import user_required, require_self_or_admin, admin_required
 from user_app.controller.user_controller import UserController
 
 user_bp = Blueprint("user_bp", __name__)
@@ -24,3 +24,8 @@ def update():
     if forbidden:
         return forbidden
     return UserController.update(data)
+
+@user_bp.route("/users/batch", methods=["POST"])
+@admin_required
+def get_batch_users():
+    return UserController.get_batch_users(request.json)

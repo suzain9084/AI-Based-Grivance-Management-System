@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from grievance_app.controller.grievance_controller import GrievanceController
-from shared.auth.decorators import require_self_or_admin, token_required, user_required
+from shared.auth.decorators import admin_required, require_self_or_admin, token_required, user_required
 
 grievance_bp = Blueprint("grievance_bp", __name__)
 
@@ -25,11 +25,11 @@ def speechToText():
 
 @grievance_bp.route("/get_all_grievance/<int:user_id>", methods=["GET"])
 @token_required
-def get_all_grievance(user_id):
+def get_user_grievances(user_id):
     forbidden = require_self_or_admin(user_id)
     if forbidden:
         return forbidden
-    return GrievanceController.get_all_grievance(user_id)
+    return GrievanceController.get_grievances_for_user(user_id)
 
 
 @grievance_bp.route("/get_audio/<int:g_id>", methods=["GET"])
@@ -40,11 +40,11 @@ def get_audio(g_id):
 
 @grievance_bp.route("/get_data_statcard/<int:u_id>", methods=["GET"])
 @token_required
-def get_stat_card_data(u_id):
+def get_user_stat_card_data(u_id):
     forbidden = require_self_or_admin(u_id)
     if forbidden:
         return forbidden
-    return GrievanceController.get_state_card(u_id)
+    return GrievanceController.get_user_state_card(u_id)
 
 
 @grievance_bp.route("/kpi_report/<int:u_id>", methods=["GET"])
@@ -54,3 +54,32 @@ def grievance_kpi_report(u_id):
     if forbidden:
         return forbidden
     return GrievanceController.grievance_kpi_report(u_id)
+
+
+@grievance_bp.route("/admin/all_grievance", methods=["GET"])
+@admin_required
+def get_all_grievances_admin():
+    return GrievanceController.get_all_grievances_admin()
+
+
+@grievance_bp.route("/admin/grievanceCategory/<status>/<time_range>", methods=["GET"])
+@admin_required
+def get_grievance_category(status, time_range):
+    return GrievanceController.get_grievance_category(status, time_range)
+
+
+@grievance_bp.route(
+    "/admin/get_data_statcard/<int:this_month>/<int:this_year>/<int:last_month>/<int:last_month_year>",
+    methods=["GET"],
+)
+@admin_required
+def get_admin_stat_card(this_month, this_year, last_month, last_month_year):
+    return GrievanceController.get_admin_state_card(
+        this_month, this_year, last_month, last_month_year
+    )
+
+
+@grievance_bp.route("/admin/get_line_graph_data/<time_range>", methods=["GET"])
+@admin_required
+def get_admin_line_graph_data(time_range):
+    return GrievanceController.get_line_graph_data(time_range)

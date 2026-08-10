@@ -1,8 +1,9 @@
+from flask import jsonify
 from shared.auth.jwt_utils import create_access_token
-from shared.models.admin_model import Admin
+from admin_app.models.admin_model import Admin
 from admin_app.services.admin_service import AdminService
 from admin_app.view.admin_view import AdminView
-from user_app.view.user_view import UserView
+# from user_app.view.user_view import UserView
 
 
 class AdminController:
@@ -39,7 +40,7 @@ class AdminController:
     def get_grievance_by_category(status, time_range):
         res, data = AdminService.get_grievance_by_category(status, time_range)
         if res:
-            return AdminView.render_category_wise_grievance(data), 200
+            return jsonify(data), 200
         return AdminView.render_error(data), 500
 
     @staticmethod
@@ -64,12 +65,12 @@ class AdminController:
             last_month = this_month - 1
             last_month_year = this_year
 
-        res, this_month_counts, last_month_counts = AdminService.get_state_card(
+        res, data = AdminService.get_state_card(
             this_month, this_year, last_month, last_month_year
         )
         if res:
-            return AdminView.render_stat_card(this_month_counts, last_month_counts), 200
-        return AdminView.render_error(this_month_counts), 500
+            return AdminView.render_stat_card(data["this_month"], data["last_month"]), 200
+        return AdminView.render_error(data), 500
 
     @staticmethod
     def get_line_graph_data(time_range):

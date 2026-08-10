@@ -2,7 +2,7 @@ absl-py==2.2.2
 alembic==1.13.2
 annotated-types==0.7.0
 astunparse==1.6.3
-av==14.3.0
+av>=14.0.0
 beautifulsoup4==4.13.4
 blinker==1.8.2
 cachetools==5.5.2
@@ -17,11 +17,12 @@ ctranslate2 ==4.6.0
 fanstatic==1.5
 faster-whisper==1.1.1
 filelock==3.18.0
-Flask-Limiter==3.12
+rich>=12.0.0,<14.0.0
+Flask-Limiter>=3.0.0
 Flask==3.0.3
 flask-cors==5.0.1
 Flask-Migrate==4.0.7
-Flask-SQLAlche==3.1.1
+Flask-SQLAlchemy==3.1.1
 flatbuffers==25.2.10
 fsspec==2025.3.2
 gast==0.6.0
@@ -93,7 +94,6 @@ PyYAML==6.0.2
 RapidFuzz==3.13.0
 regex==2024.11.6
 requests==2.32.3
-rich==14.0.0
 rsa==4.9.1
 safetensors==0.5.3
 sentencepiece==0.2.0

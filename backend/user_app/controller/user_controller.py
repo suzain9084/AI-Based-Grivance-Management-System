@@ -1,5 +1,5 @@
 from shared.auth.jwt_utils import create_access_token
-from shared.models.user_model import User
+from user_app.models.user_model import User
 from user_app.services.user_service import UserService
 from user_app.view.user_view import UserView
 
@@ -34,3 +34,10 @@ class UserController:
         if res:
             return UserView.renderUser(user), 200
         return UserView.render_error(user), 500
+
+    @staticmethod
+    def get_batch_users(data):
+        res, users = UserService.get_batch_users(data)
+        if res:
+            return UserView.renderUsers(users), 200
+        return UserView.render_error(users), 404

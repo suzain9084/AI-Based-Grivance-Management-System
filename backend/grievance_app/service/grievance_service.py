@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import extract, func, text
+from sqlalchemy import case, extract, func, text
 
-from shared.models.grievance_model import Grievance
+from grievance_app.models.grievance_model import Grievance
 from shared.utils.db_utils import db
 
 
@@ -29,7 +29,7 @@ class GrievanceService:
             return False, str(error)
 
     @staticmethod
-    def get_all_grievance(user_id):
+    def get_grievances_for_user(user_id):
         try:
             grievances = Grievance.query.filter_by(u_id=user_id)
             return True, grievances
@@ -49,7 +49,7 @@ class GrievanceService:
             return False, str(err)
 
     @staticmethod
-    def get_state_card(u_id, this_month, this_year, last_month, last_month_year):
+    def get_user_state_card(u_id, this_month, this_year, last_month, last_month_year):
         try:
             this_month_counts = (
                 db.session.query(Grievance.status, func.count(Grievance.g_id))
@@ -66,6 +66,32 @@ class GrievanceService:
                 db.session.query(Grievance.status, func.count(Grievance.g_id))
                 .filter(
                     Grievance.u_id == u_id,
+                    extract("month", Grievance.time_stamp) == last_month,
+                    extract("year", Grievance.time_stamp) == last_month_year,
+                )
+                .group_by(Grievance.status)
+                .all()
+            )
+            return True, this_month_counts, last_month_counts
+        except Exception as err:
+            return False, str(err), None
+
+    @staticmethod
+    def get_admin_state_card(this_month, this_year, last_month, last_month_year):
+        try:
+            this_month_counts = (
+                db.session.query(Grievance.status, func.count(Grievance.g_id))
+                .filter(
+                    extract("month", Grievance.time_stamp) == this_month,
+                    extract("year", Grievance.time_stamp) == this_year,
+                )
+                .group_by(Grievance.status)
+                .all()
+            )
+
+            last_month_counts = (
+                db.session.query(Grievance.status, func.count(Grievance.g_id))
+                .filter(
                     extract("month", Grievance.time_stamp) == last_month,
                     extract("year", Grievance.time_stamp) == last_month_year,
                 )
@@ -111,3 +137,84 @@ class GrievanceService:
             return True, resolution_rate, avg_response_time_seconds
         except Exception as err:
             return False, str(err), None
+
+    @staticmethod
+    def get_all_grievances():
+        try:
+            grievances = Grievance.query.order_by(Grievance.time_stamp.desc()).all()
+            return True, grievances
+        except Exception as err:
+            db.session.rollback()
+            return False, str(err)
+
+    @staticmethod
+    def get_grievance_by_category(status, time_range):
+        try:
+            if time_range and int(time_range) > 0 and status.lower() != "all complaints":
+                counts = (
+                    db.session.query(Grievance.c_id, func.count(Grievance.g_id))
+                    .filter(
+                        func.lower(Grievance.status) == status.lower(),
+                        Grievance.time_stamp
+                        >= func.now() - text(f"INTERVAL {int(time_range)} MONTH"),
+                    )
+                    .group_by(Grievance.c_id)
+                    .all()
+                )
+                return True, counts
+
+            if time_range and int(time_range) > 0 and status.lower() == "all complaints":
+                counts = (
+                    db.session.query(Grievance.c_id, func.count(Grievance.g_id))
+                    .filter(
+                        Grievance.time_stamp
+                        >= func.now() - text(f"INTERVAL {int(time_range)} MONTH")
+                    )
+                    .group_by(Grievance.c_id)
+                    .all()
+                )
+                return True, counts
+
+            if time_range and int(time_range) == 0 and status.lower() == "all complaints":
+                counts = (
+                    db.session.query(Grievance.c_id, func.count(Grievance.g_id))
+                    .group_by(Grievance.c_id)
+                    .all()
+                )
+                return True, counts
+
+            counts = (
+                db.session.query(Grievance.c_id, func.count(Grievance.g_id))
+                .filter(func.lower(Grievance.status) == status.lower())
+                .group_by(Grievance.c_id)
+                .all()
+            )
+            return True, counts
+        except Exception as err:
+            return False, str(err)
+
+    @staticmethod
+    def get_line_graph_data(time_range):
+        try:
+            result = (
+                db.session.query(
+                    func.monthname(Grievance.time_stamp).label("month"),
+                    func.count().label("totalComplaints"),
+                    func.sum(case((Grievance.status == "Resolved", 1), else_=0)).label(
+                        "resolved"
+                    ),
+                )
+                .filter(
+                    Grievance.time_stamp
+                    >= func.now() - text(f"INTERVAL {int(time_range)} MONTH")
+                )
+                .group_by(
+                    func.month(Grievance.time_stamp),
+                    func.monthname(Grievance.time_stamp),
+                )
+                .order_by(func.month(Grievance.time_stamp))
+                .all()
+            )
+            return True, result
+        except Exception as err:
+            return False, str(err)

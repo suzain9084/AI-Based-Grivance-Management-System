@@ -1,40 +1,54 @@
-from shared.models.admin_model import Admin
-from shared.utils.db_utils import db
-from werkzeug.security import generate_password_hash,check_password_hash
-from shared.models.grievance_model import Grievance
-from shared.models.user_model import User
-from sqlalchemy import func, text, extract ,case
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
+
+from admin_app.clients.grievance_client import GrievanceClient
+from admin_app.clients.user_client import UserClient
+from admin_app.models.admin_model import Admin
+from shared.utils.db_utils import db
+from werkzeug.security import check_password_hash, generate_password_hash
+
+C_ID_TO_COMMITTEE_NAME = {
+    1: "examination",
+    2: "infrastructure",
+    3: "general facility",
+    4: "research facility",
+    5: "journals/literature",
+    6: "fellowship",
+}
+
 
 class AdminService:
+    grievance_client = GrievanceClient()
+    user_client = UserClient()
+
     @staticmethod
     def signup(data):
         try:
-            hashed_password = generate_password_hash(data['password'], method='pbkdf2:sha256', salt_length=8)
+            hashed_password = generate_password_hash(
+                data["password"], method="pbkdf2:sha256", salt_length=8
+            )
             new_admin = Admin(
-                full_name=data['full_name'],
-                admin_id=data['admin_id'],
-                email=data['email'],
-                phone=data['phone'],
+                full_name=data["full_name"],
+                admin_id=data["admin_id"],
+                email=data["email"],
+                phone=data["phone"],
                 password=hashed_password,
-                c_id=data['c_id']
+                c_id=data["c_id"],
+                created_at=datetime.utcnow(),
             )
             db.session.add(new_admin)
             db.session.commit()
             return True, new_admin
-        except Exception as error: 
+        except Exception as error:
             db.session.rollback()
             return False, str(error)
-        
+
     @staticmethod
     def login(data):
         try:
-            admin = Admin.query.filter_by(admin_id=data['admin_id']).first()
-            if admin and check_password_hash(admin.password, data['password']):
+            admin = Admin.query.filter_by(admin_id=data["admin_id"]).first()
+            if admin and check_password_hash(admin.password, data["password"]):
                 return True, admin
-            else:
-                return False, "Invalid Admin ID or password"
+            return False, "Invalid Admin ID or password"
         except Exception as error:
             db.session.rollback()
             return False, str(error)
@@ -54,97 +68,52 @@ class AdminService:
             return False, str(error)
 
     @staticmethod
-    def get_grievance_by_category(status,time_range):
-        try:
-            if time_range and int(time_range) > 0 and status.lower() != "All Complaints".lower(): 
-                counts = db.session.query(
-                    Grievance.c_id , func.count(Grievance.g_id)
-                ).filter(
-                        func.lower(Grievance.status) == status.lower(),
-                        Grievance.time_stamp >= func.now() - text(f"INTERVAL {int(time_range)} MONTH")
-                ).group_by(Grievance.c_id).all()
-                return True,counts
-            
-            elif time_range and int(time_range) > 0 and status.lower() == "All Complaints".lower():
-                counts = db.session.query(
-                    Grievance.c_id , func.count(Grievance.g_id)
-                ).filter(
-                        Grievance.time_stamp >= func.now() - text(f"INTERVAL {int(time_range)} MONTH")
-                ).group_by(Grievance.c_id).all()
-                return True,counts
-            
-            elif time_range and int(time_range) == 0 and status.lower() == "All Complaints".lower():
-                counts = db.session.query(
-                    Grievance.c_id , func.count(Grievance.g_id)
-                ).group_by(Grievance.c_id).all()
-                return True,counts
-            
-            else:
-                counts = db.session.query(
-                    Grievance.c_id , func.count(Grievance.g_id)
-                ).filter(
-                        func.lower(Grievance.status) == status.lower(),
-                ).group_by(Grievance.c_id).all()
-                return True,counts
+    def get_grievance_by_category(status, time_range):
+        return AdminService.grievance_client.get_grievance_category(status, time_range)
 
-        except Exception as err:
-            return False, str(err)
-    
     @staticmethod
     def get_all_grievance():
-        try:
-            grievances = db.session.query(
-                Grievance.g_id,
-                Grievance.title,
-                Grievance.c_id,
-                Grievance.status,
-                Grievance.time_stamp,
-                User.student_id,
-                User.full_name,
-                Grievance.desc,
-                User.department
-            ).join(
-                User, Grievance.u_id == User.u_id
-            ).order_by(
-                Grievance.time_stamp
-            ).all()
-            return True, grievances
-        except Exception as err:
-            return False, err
+        ok, grievances = AdminService.grievance_client.get_all_grievances()
+        if not ok:
+            return False, grievances
+
+        u_ids = list({grievance["u_id"] for grievance in grievances})
+        users_by_id = {}
+        if u_ids:
+            ok, users = AdminService.user_client.get_batch_users(u_ids)
+            if ok:
+                users_by_id = {int(key): value for key, value in users.items()}
+
+        merged = []
+        for grievance in grievances:
+            user = users_by_id.get(grievance["u_id"], {})
+            timestamp = grievance.get("time_stamp", "")
+            date = timestamp.split("T")[0] if isinstance(timestamp, str) else ""
+            c_id = grievance.get("c_id")
+            category = C_ID_TO_COMMITTEE_NAME.get(c_id, str(c_id))
+
+            merged.append(
+                {
+                    "id": grievance["id"],
+                    "title": grievance["title"],
+                    "category": category,
+                    "status": grievance["status"],
+                    "date": date,
+                    "studentId": user.get("student_id", "Unknown"),
+                    "studentName": user.get("full_name", "Unknown"),
+                    "description": grievance.get("desc", ""),
+                    "department": user.get("department", "Unknown"),
+                }
+            )
+
+        return True, merged
 
     @staticmethod
-    def get_state_card(this_month,this_year,last_month,last_month_year):
-        try:
-            this_month_counts = db.session.query(Grievance.status, func.count(Grievance.g_id)).filter(
-                extract('month', Grievance.time_stamp) == this_month,
-                extract('year', Grievance.time_stamp) == this_year
-            ).group_by(Grievance.status).all()
-
-            last_month_counts = db.session.query(
-            Grievance.status, func.count(Grievance.g_id)).filter(
-                extract('month', Grievance.time_stamp) == last_month,
-                extract('year', Grievance.time_stamp) == last_month_year
-            ).group_by(Grievance.status).all()
-            return True,this_month_counts,last_month_counts
-        except Exception as err:
-            return False, str(err),None
+    def get_state_card(this_month, this_year, last_month, last_month_year):
+        return AdminService.grievance_client.get_state_card(
+            this_month, this_year, last_month, last_month_year
+        )
 
     @staticmethod
     def get_line_graph_data(time_range):
-        try:
-            result = db.session.query(
-                func.monthname(Grievance.time_stamp).label('month'),
-                func.count().label('totalComplaints'),
-                func.sum(
-                    case((Grievance.status == 'resolved', 1), else_=0)
-                ).label('resolved')
-                ).filter(
-                    Grievance.time_stamp >= func.now() - text(f"INTERVAL {int(time_range)} MONTH")
-                ).group_by(
-                    func.month(Grievance.time_stamp), func.monthname(Grievance.time_stamp)
-                ).order_by(
-                    func.month(Grievance.time_stamp)).all()
-            return True, result
-        except Exception as err:
-            return False,str(err)
-    
+        return AdminService.grievance_client.get_line_graph_data(time_range)

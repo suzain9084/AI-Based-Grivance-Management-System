@@ -1,15 +1,15 @@
-from flask import jsonify ,send_file, make_response
+from flask import jsonify, send_file, make_response
 from io import BytesIO
-from urllib.parse import urlparse
 
 c_id_to_comittee_name = {
-    1 : "examination",
-    2 : "infrastructure", 
-    3 : "general facility",
-    4 : "research facility",
-    5 : "journals/literature",
-    6 : "fellowship"
+    1: "examination",
+    2: "infrastructure",
+    3: "general facility",
+    4: "research facility",
+    5: "journals/literature",
+    6: "fellowship",
 }
+
 
 class GrievanceView:
     @staticmethod
@@ -20,9 +20,11 @@ class GrievanceView:
             "desc": grievance.desc,
             "language": grievance.language,
             "u_id": grievance.u_id,
-            "c_id": c_id_to_comittee_name[grievance.c_id],
+            "c_id": grievance.c_id,
             "status": grievance.status,
-            "time_stamp": grievance.time_stamp,
+            "time_stamp": grievance.time_stamp.isoformat()
+            if grievance.time_stamp
+            else None,
         }
 
     @staticmethod
@@ -32,7 +34,7 @@ class GrievanceView:
     @staticmethod
     def render_text(text):
         return jsonify(text)
-    
+
     @staticmethod
     def render_audio(blob_data):
         try:
@@ -61,13 +63,27 @@ class GrievanceView:
             {
                 "title": "Resolved",
                 "value": this_month_data.get("Resolved", 0),
-                "trend": this_month_data.get("Resolved", 0) - last_month_data.get("Resolved", 0),
+                "trend": this_month_data.get("Resolved", 0)
+                - last_month_data.get("Resolved", 0),
             },
             {
                 "title": "Pending",
                 "value": this_month_data.get("Pending", 0),
-                "trend": this_month_data.get("Pending", 0) - last_month_data.get("Pending", 0),
+                "trend": this_month_data.get("Pending", 0)
+                - last_month_data.get("Pending", 0),
             },
+        ]
+        return jsonify(result)
+
+    @staticmethod
+    def render_category_wise_grievance(data):
+        grievance_counts = {c_id: count for c_id, count in data}
+        result = [
+            {
+                "category": c_id_to_comittee_name.get(c_id),
+                "complaints": grievance_counts.get(c_id, 0),
+            }
+            for c_id in c_id_to_comittee_name.keys()
         ]
         return jsonify(result)
 
@@ -84,4 +100,3 @@ class GrievanceView:
             },
         ]
         return jsonify(result)
-

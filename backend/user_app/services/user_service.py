@@ -1,4 +1,4 @@
-from shared.models.user_model import User
+from user_app.models.user_model import User
 from shared.utils.db_utils import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -49,4 +49,20 @@ class UserService:
                 return True, user
             return False, "User not Found"
         except Exception as error:
+            return False, str(error)
+
+    @staticmethod
+    def get_batch_users(data):
+        try:
+            u_ids = data.get("u_ids", [])
+            if not u_ids:
+                return False, "No user IDs provided"
+
+            users = User.query.filter(User.u_id.in_(u_ids)).all()
+            if not users:
+                return False, "Users not found"
+
+            return True, {user.u_id: user for user in users}
+        except Exception as error:
+            db.session.rollback()
             return False, str(error)

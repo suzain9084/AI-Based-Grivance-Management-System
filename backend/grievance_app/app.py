@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 from config.settings import CONNECTION_STRING, FLASK_DEBUG, GRIEVANCE_SERVICE_PORT, init_settings
 from grievance_app.routes.grievance_routes import grievance_bp
-from shared.utils.db_utils import db
+from shared.utils.db_utils import db, migrate
 
 init_settings("grievance_app")
 
@@ -20,6 +20,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
 
 db.init_app(app)
+migrate.init_app(app, db)
 app.register_blueprint(grievance_bp)
 
 if __name__ == "__main__":

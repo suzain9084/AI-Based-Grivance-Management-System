@@ -6,9 +6,10 @@ sys.path.append(os.getcwd())
 from flask import Flask
 from flask_cors import CORS
 
-from admin_app.routes.admin_routes import admin_bp
 from config.settings import ADMIN_SERVICE_PORT, CONNECTION_STRING, FLASK_DEBUG, init_settings
-from shared.utils.db_utils import db
+from shared.utils.db_utils import db, migrate
+from admin_app.routes.admin_routes import admin_bp
+from admin_app.models.admin_model import Admin
 
 init_settings("admin_app")
 
@@ -20,6 +21,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = True
 
 db.init_app(app)
+migrate.init_app(app, db)
 app.register_blueprint(admin_bp)
 
 if __name__ == "__main__":
