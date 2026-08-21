@@ -15,6 +15,7 @@ from config.settings import (
     API_GATEWAY_PORT,
     FLASK_DEBUG,
     GRIEVANCE_SERVICE_URL,
+    NOTIFICATION_SERVICE_URL,
     USER_SERVICE_URL,
     init_settings,
 )
@@ -34,6 +35,9 @@ limiter = Limiter(
 
 @app.before_request
 def gateway_auth():
+    if request.path.startswith("/socket.io"):
+        return None
+
     if not request.path.startswith("/api/"):
         return None
 
@@ -72,6 +76,19 @@ def grievances_proxy(path):
 def admin_proxy(path):
     return proxy_to_service(ADMIN_SERVICE_URL, path, request)
 
+
+@app.route("/api/notifications/<path:path>", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@limiter.limit("100 per minute")
+def notifications_proxy(path):
+    return proxy_to_service(NOTIFICATION_SERVICE_URL, path, request)
+
+
+@app.route("/socket.io", defaults={"path": ""}, methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@app.route("/socket.io/", defaults={"path": ""}, methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+@app.route("/socket.io/<path:path>", methods=["GET", "POST", "PUT", "PATCH", "DELETE"])
+def socket_io_proxy(path):
+    upstream_path = f"socket.io/{path}" if path else "socket.io/"
+    return proxy_to_service(NOTIFICATION_SERVICE_URL, upstream_path, request)
 
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG, port=API_GATEWAY_PORT)

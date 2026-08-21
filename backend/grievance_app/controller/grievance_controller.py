@@ -3,9 +3,11 @@ from io import BytesIO
 
 from flask import g, jsonify
 
-from ML_Models.MLmodel import MLmodelsClass
+from grievance_app.clients.ml_model_client import MLModelClient
 from grievance_app.service.grievance_service import GrievanceService
 from grievance_app.view.grievance_view import GrievanceView
+
+_ml_client = MLModelClient()
 
 commitee_name_to_c_id = {
     "examination": 1,
@@ -39,8 +41,13 @@ class GrievanceController:
         desc = data["description"]
         comittee = data["comittee"]
 
-        if data["comittee"] not in commitee_name_to_c_id:
-            comittee = MLmodelsClass.grievance_classification(desc, language)
+        if comittee not in commitee_name_to_c_id:
+            ok, result = _ml_client.committee_classification(desc, language)
+            if not ok:
+                return GrievanceController._error(result)
+            if not result.get("success"):
+                return GrievanceController._error(result.get("error", "Classification failed"))
+            comittee = result["comittee"]
 
         c_id = commitee_name_to_c_id[comittee]
         title = data["title"]
@@ -57,10 +64,12 @@ class GrievanceController:
     def convertToText(file, lan):
         try:
             buffer = BytesIO(file.read())
-            res = MLmodelsClass.speechTotext(buffer, language_to_code[lan])
-            if res["success"]:
-                return GrievanceView.render_text(res["text"]), 200
-            return GrievanceController._error(res["error"])
+            ok, result = _ml_client.speech_to_text(buffer, language_to_code[lan])
+            if not ok:
+                return GrievanceController._error(result)
+            if result.get("success"):
+                return GrievanceView.render_text(result["text"]), 200
+            return GrievanceController._error(result.get("error", "Speech recognition failed"))
         except Exception as error:
             return GrievanceController._error(str(error))
 
