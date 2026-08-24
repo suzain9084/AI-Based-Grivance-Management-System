@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="780" viewBox="0 0 1100 780" role="img" aria-labelledby="title desc">
+  <title id="title">AI-Based Grievance Management System Architecture</title>
+  <desc id="desc">React frontend talks to User, Grievance, and Admin Flask apps. Grievance uses in-process ML models that call Gemini and Google Speech. All three apps share one MySQL database.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#0f172a" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="780" fill="#f8fafc"/>
+  <text x="550" y="36" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#0f172a">AI-Based Grievance Management System  Architecture</text>
+
+  <!-- Client -->
+  <rect x="40" y="58" width="1020" height="120" rx="14" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="64" y="84" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#4338ca">CLIENT</text>
+  <rect x="330" y="98" width="440" height="56" rx="10" fill="#ffffff" stroke="#6366f1" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="550" y="125" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#1e1b4b">React Frontend (Vite + MUI)</text>
+  <text x="550" y="145" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">localhost:5173</text>
+
+  <!-- Backend -->
+  <rect x="40" y="204" width="700" height="170" rx="14" fill="#ecfdf5" stroke="#10b981" stroke-width="1.5"/>
+  <text x="64" y="230" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#047857">BACKEND SERVICES</text>
+  <rect x="64" y="250" width="200" height="90" rx="10" fill="#ffffff" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="164" y="290" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#064e3b">User App</text>
+  <text x="164" y="312" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">:5000</text>
+  <rect x="290" y="250" width="200" height="90" rx="10" fill="#ffffff" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="290" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#064e3b">Grievance App</text>
+  <text x="390" y="312" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">:5001</text>
+  <rect x="516" y="250" width="200" height="90" rx="10" fill="#ffffff" stroke="#10b981" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="616" y="290" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#064e3b">Admin App</text>
+  <text x="616" y="312" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">:5002</text>
+
+  <!-- ML -->
+  <rect x="40" y="400" width="700" height="130" rx="14" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="64" y="426" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#c2410c">ML (IN-PROCESS)</text>
+  <rect x="190" y="444" width="400" height="62" rx="10" fill="#ffffff" stroke="#f97316" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="390" y="470" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#7c2d12">ML Models</text>
+  <text x="390" y="490" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">Speech-to-text + BART classification</text>
+
+  <!-- External -->
+  <rect x="770" y="204" width="290" height="326" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="794" y="230" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#b45309">EXTERNAL APIS</text>
+  <rect x="800" y="268" width="230" height="80" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="915" y="314" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#78350f">Google Gemini API</text>
+  <rect x="800" y="380" width="230" height="80" rx="10" fill="#ffffff" stroke="#d97706" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="915" y="418" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#78350f">Google Speech</text>
+  <text x="915" y="440" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#78350f">Recognition</text>
+
+  <!-- Database -->
+  <rect x="40" y="556" width="1020" height="190" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="64" y="582" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0369a1">DATABASE</text>
+  <ellipse cx="550" cy="630" rx="220" ry="28" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+  <rect x="330" y="630" width="440" height="70" fill="#ffffff" stroke="none"/>
+  <line x1="330" y1="630" x2="330" y2="700" stroke="#0284c7" stroke-width="1.5"/>
+  <line x1="770" y1="630" x2="770" y2="700" stroke="#0284c7" stroke-width="1.5"/>
+  <ellipse cx="550" cy="700" rx="220" ry="28" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="550" y="668" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="16" font-weight="600" fill="#0c4a6e">MySQL</text>
+  <text x="550" y="690" text-anchor="middle" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="12" fill="#64748b">grievance_management_system_db</text>
+
+  <!-- Frontend -> services -->
+  <line x1="430" y1="154" x2="164" y2="250" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="250" y="188" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#334155">HTTP :5000</text>
+  <line x1="550" y1="154" x2="390" y2="250" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="490" y="188" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#334155">HTTP :5001</text>
+  <line x1="670" y1="154" x2="616" y2="250" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="660" y="188" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#334155">HTTP :5002</text>
+
+  <!-- Grievance -> ML -->
+  <line x1="390" y1="340" x2="390" y2="444" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="400" y="400" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="11" fill="#334155">import</text>
+
+  <!-- ML -> external -->
+  <line x1="590" y1="475" x2="800" y2="308" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="590" y1="475" x2="800" y2="420" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- Apps -> DB -->
+  <line x1="164" y1="340" x2="164" y2="556" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="390" y1="506" x2="390" y2="556" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="616" y1="340" x2="616" y2="556" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+</svg>
