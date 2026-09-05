@@ -26,6 +26,7 @@ class GrievanceService:
             return True, new_grievance
         except Exception as error:
             db.session.rollback()
+            print("Exception: ", error)
             return False, str(error)
 
     @staticmethod

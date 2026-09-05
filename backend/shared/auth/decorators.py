@@ -1,10 +1,11 @@
 from functools import wraps
-
+import os
 import jwt
 from flask import g, jsonify, request
 
-from config.settings import JWT_SECRET
-
+from dotenv import load_dotenv
+load_dotenv()
+JWT_SECRET = os.getenv("JWT_SECRET")
 
 def _unauthorized(message="Authentication token is missing"):
     return jsonify({"message": message}), 401

@@ -14,7 +14,7 @@ if __name__ == "__main__":
     run_service("user_app/app.py")
     run_service("admin_app/app.py")
     run_service("ML_Models/app.py")
-    run_service("notification_app/app.py")
+    # run_service("notification_app/app.py")
     run_service("api_gateway/app.py")
 
     try:

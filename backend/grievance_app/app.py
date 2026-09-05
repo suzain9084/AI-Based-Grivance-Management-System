@@ -5,12 +5,15 @@ sys.path.append(os.getcwd())
 
 from flask import Flask
 from flask_cors import CORS
-
-from config.settings import CONNECTION_STRING, FLASK_DEBUG, GRIEVANCE_SERVICE_PORT, init_settings
+from dotenv import load_dotenv
 from grievance_app.routes.grievance_routes import grievance_bp
 from shared.utils.db_utils import db, migrate
+load_dotenv()
 
-init_settings("grievance_app")
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+GRIEVANCE_SERVICE_PORT = os.getenv("GRIEVANCE_SERVICE_PORT")
+CONNECTION_STRING = os.getenv("GRIEVANCE_CONNECTION_STRING")
 
 app = Flask(__name__)
 CORS(app)

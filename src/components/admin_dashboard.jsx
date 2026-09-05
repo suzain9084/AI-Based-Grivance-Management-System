@@ -180,7 +180,7 @@ const AdminDashboard = () => {
 
         {stateCard.length > 0 && <Grid container spacing={3} sx={{ mb: 4 }}>
           {stateCard.map((stat, index)=>{
-            return( <Grid item xs={12} md={4} key={index}>
+            return( <Grid size={{ xs: 12, md: 4 }} key={index}>
                           <StatCard {...stat} />
                     </Grid>)
           })}
@@ -259,21 +259,21 @@ const AdminDashboard = () => {
         </Paper>}
 
         <Grid container spacing={3} sx={{ paddingBottom: '30px' }}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <MetricCard
               title="Average Resolution Time"
               value="2.5 days"
               color="#2196f3"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <MetricCard
               title="Resolution Rate"
               value="78%"
               color="#4caf50"
             />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <MetricCard
               title="User Satisfaction"
               value="4.2/5"

@@ -1,13 +1,18 @@
 from datetime import datetime
 from io import BytesIO
-
+import os
 from flask import g, jsonify
 
 from grievance_app.clients.ml_model_client import MLModelClient
 from grievance_app.service.grievance_service import GrievanceService
 from grievance_app.view.grievance_view import GrievanceView
+from dotenv import load_dotenv
+load_dotenv()
 
-_ml_client = MLModelClient()
+print("Current working directory: ", os.curdir)
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL")
+print("ML_SERVICE_URL: ", ML_SERVICE_URL)
+_ml_client = MLModelClient(base_url=ML_SERVICE_URL)
 
 commitee_name_to_c_id = {
     "examination": 1,
@@ -51,7 +56,9 @@ class GrievanceController:
 
         c_id = commitee_name_to_c_id[comittee]
         title = data["title"]
-        audio = file["blob"].read()
+        audio = None
+        if "blob" in file.keys():
+            audio = file["blob"].read()
 
         res, grievance = GrievanceService.add_grievance(
             u_id, c_id, desc, title, audio, language

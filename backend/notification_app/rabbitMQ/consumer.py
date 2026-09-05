@@ -1,20 +1,19 @@
 import json
 import threading
 import time
-
 import pika
-
-from config.settings import (
-    NOTIFICATION_QUEUE,
-    RABBITMQ_HOST,
-    RABBITMQ_PASSWORD,
-    RABBITMQ_PORT,
-    RABBITMQ_URL,
-    RABBITMQ_USER,
-    RABBITMQ_VHOST,
-)
 from notification_app.controller.Notification_controller import NotificationController
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+RABBITMQ_URL = os.getenv("RABBITMQ_URL")
+RABBITMQ_USER = os.getenv("RABBITMQ_USER")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = os.getenv("RABBITMQ_PORT")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST")
+NOTIFICATION_QUEUE = os.getenv("NOTIFICATION_QUEUE")
 
 def _connection_parameters():
     if RABBITMQ_URL:

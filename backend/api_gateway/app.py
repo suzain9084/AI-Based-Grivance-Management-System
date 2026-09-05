@@ -10,17 +10,15 @@ from flask_limiter.util import get_remote_address
 
 from api_gateway.auth import is_public_route, validate_request_token
 from api_gateway.proxy import proxy_to_service
-from config.settings import (
-    ADMIN_SERVICE_URL,
-    API_GATEWAY_PORT,
-    FLASK_DEBUG,
-    GRIEVANCE_SERVICE_URL,
-    NOTIFICATION_SERVICE_URL,
-    USER_SERVICE_URL,
-    init_settings,
-)
+from dotenv import load_dotenv
 
-init_settings("api_gateway")
+load_dotenv()
+ADMIN_SERVICE_URL = os.getenv("ADMIN_SERVICE_URL")
+API_GATEWAY_PORT = os.getenv("API_GATEWAY_PORT")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+GRIEVANCE_SERVICE_URL = os.getenv("GRIEVANCE_SERVICE_URL")
+NOTIFICATION_SERVICE_URL = os.getenv("NOTIFICATION_SERVICE_URL")
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})

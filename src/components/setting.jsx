@@ -55,7 +55,7 @@ const Settings = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Notifications
@@ -121,7 +121,7 @@ const Settings = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Appearance
@@ -160,7 +160,7 @@ const Settings = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Language & Region
@@ -168,7 +168,7 @@ const Settings = () => {
               <Divider sx={{ mb: 3 }} />
 
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <FormControl fullWidth>
                     <InputLabel>Language</InputLabel>
                     <Select
@@ -182,7 +182,7 @@ const Settings = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <FormControl fullWidth>
                     <InputLabel>Timezone</InputLabel>
                     <Select
@@ -200,7 +200,7 @@ const Settings = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="contained"

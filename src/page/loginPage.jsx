@@ -1,16 +1,31 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useEffect } from 'react';
 import '../css/loginPage.css';
 import { useForm } from 'react-hook-form';
 import { userContext } from '../context/usercontext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiUrl } from '../utils/api';
 
 
 export default function AuthPanel() {
-  const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  const [isAdmin, setisAdmin] = useState(false)
-  const { User, setUser } = useContext(userContext)
-  const navigate = useNavigate()
+  const location = useLocation();
+  const [isRightPanelActive, setIsRightPanelActive] = useState(location.pathname === '/signup');
+  const [isAdmin, setisAdmin] = useState(false);
+  const { setUser } = useContext(userContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsRightPanelActive(location.pathname === '/signup');
+  }, [location.pathname]);
+
+  const showSignIn = () => {
+    setIsRightPanelActive(false);
+    navigate('/login', { replace: true });
+  };
+
+  const showSignUp = () => {
+    setIsRightPanelActive(true);
+    navigate('/signup', { replace: true });
+  };
 
   const {
     register: registerSignUp,
@@ -24,9 +39,11 @@ export default function AuthPanel() {
     formState: { errors: signInErrors, isSubmitting: isSignInSubmitting },
   } = useForm();
 
+  const adminRegister = registerSignIn('isAdmin');
+  const signInIdError = signInErrors.student_id || signInErrors.admin_id;
+
   const onSignUpSubmit = useCallback(async (data) => {
     try {
-      console.log('SignUp Data:', data);
       const response = await fetch(apiUrl("/api/users/signup"), {
         method: 'POST',
         headers: {
@@ -49,11 +66,10 @@ export default function AuthPanel() {
     } catch (error) {
       alert("Error: " + error.message);
     }
-  }, [User]);
+  }, [navigate, setUser]);
 
 
   const onSignInSubmit = useCallback(async (data) => {
-    console.log(data)
     try {
       let response
       if (data.isAdmin) {
@@ -88,111 +104,159 @@ export default function AuthPanel() {
     } catch (error) {
       alert("Error: " + error.message);
     }
-  }, [User]);
+  }, [navigate, setUser]);
 
 
   return (
-    <div className='boby'>
-      <div className={`container ${isRightPanelActive ? 'right-panel-active' : ''}`} id="container">
+    <div className='auth-page'>
+      <div className="auth-brand">
+        <h2>Grievance Hub</h2>
+        <p>Submit, track, and resolve campus grievances</p>
+      </div>
+
+      <div className={`auth-container ${isRightPanelActive ? 'right-panel-active' : ''}`} id="container">
 
         {/* Sign Up Form */}
-        <div className="form-container sign-up-container">
-          <form className='form' onSubmit={handleSubmitSignUp(onSignUpSubmit)}>
-            <h1 className='h1'>Create Account</h1>
-            <span className='span'>or use your email for registration</span>
+        <div className="auth-form-container sign-up-container">
+          <form className='auth-form' onSubmit={handleSubmitSignUp(onSignUpSubmit)}>
+            <h1 className='auth-title'>Create Account</h1>
+            <p className='auth-subtitle'>Enter your student details to register</p>
 
-            <input
-              type="text"
-              className={`input ${signUpErrors.full_name ? 'input-error' : ''}`}
-              placeholder="Full Name"
-              {...registerSignUp('full_name', { required: 'Full Name is required' })}
-            />
-            {signUpErrors.full_name && <p className="error-message">{signUpErrors.full_name.message}</p>}
+            <div className="signup-grid">
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signUpErrors.full_name ? 'input-error' : ''}`}
+                  placeholder="Full Name"
+                  autoComplete="name"
+                  {...registerSignUp('full_name', { required: 'Full Name is required' })}
+                />
+                {signUpErrors.full_name && <p className="error-message">{signUpErrors.full_name.message}</p>}
+              </div>
 
-            <input
-              type="email"
-              className={`input ${signUpErrors.email ? 'input-error' : ''}`}
-              placeholder="Email"
-              {...registerSignUp('email', { required: 'Email is required' })}
-            />
-            {signUpErrors.email && <p className="error-message">{signUpErrors.email.message}</p>}
+              <div className="field">
+                <input
+                  type="email"
+                  className={`auth-input ${signUpErrors.email ? 'input-error' : ''}`}
+                  placeholder="Email"
+                  autoComplete="email"
+                  {...registerSignUp('email', { required: 'Email is required' })}
+                />
+                {signUpErrors.email && <p className="error-message">{signUpErrors.email.message}</p>}
+              </div>
 
-            <input
-              type="text"
-              className={`input ${signUpErrors.phone ? 'input-error' : ''}`}
-              placeholder="Phone"
-              {...registerSignUp('phone', { required: 'Phone is required' })}
-            />
-            {signUpErrors.phone && <p className="error-message">{signUpErrors.phone.message}</p>}
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signUpErrors.phone ? 'input-error' : ''}`}
+                  placeholder="Phone"
+                  autoComplete="tel"
+                  {...registerSignUp('phone', { required: 'Phone is required' })}
+                />
+                {signUpErrors.phone && <p className="error-message">{signUpErrors.phone.message}</p>}
+              </div>
 
-            <input
-              type="text"
-              className={`input ${signUpErrors.department ? 'input-error' : ''}`}
-              placeholder="Department"
-              {...registerSignUp('department', { required: 'Department is required' })}
-            />
-            {signUpErrors.department && <p className="error-message">{signUpErrors.department.message}</p>}
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signUpErrors.department ? 'input-error' : ''}`}
+                  placeholder="Department"
+                  {...registerSignUp('department', { required: 'Department is required' })}
+                />
+                {signUpErrors.department && <p className="error-message">{signUpErrors.department.message}</p>}
+              </div>
 
-            <input
-              type="text"
-              className={`input ${signUpErrors.year ? 'input-error' : ''}`}
-              placeholder="Year"
-              {...registerSignUp('year', { required: 'Year is required' })}
-            />
-            {signUpErrors.year && <p className="error-message">{signUpErrors.year.message}</p>}
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signUpErrors.year ? 'input-error' : ''}`}
+                  placeholder="Year"
+                  {...registerSignUp('year', { required: 'Year is required' })}
+                />
+                {signUpErrors.year && <p className="error-message">{signUpErrors.year.message}</p>}
+              </div>
 
-            <input
-              type="text"
-              className={`input ${signUpErrors.student_id ? 'input-error' : ''}`}
-              placeholder="Student ID"
-              {...registerSignUp('student_id', { required: 'Student ID is required' })}
-            />
-            {signUpErrors.student_id && <p className="error-message">{signUpErrors.student_id.message}</p>}
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signUpErrors.student_id ? 'input-error' : ''}`}
+                  placeholder="Student ID"
+                  {...registerSignUp('student_id', { required: 'Student ID is required' })}
+                />
+                {signUpErrors.student_id && <p className="error-message">{signUpErrors.student_id.message}</p>}
+              </div>
 
-            <input
-              type="password"
-              className={`input ${signUpErrors.password ? 'input-error' : ''}`}
-              placeholder="Password"
-              {...registerSignUp('password', { required: 'Password is required' })}
-            />
-            {signUpErrors.password && <p className="error-message">{signUpErrors.password.message}</p>}
+              <div className="field field-full">
+                <input
+                  type="password"
+                  className={`auth-input ${signUpErrors.password ? 'input-error' : ''}`}
+                  placeholder="Password"
+                  autoComplete="new-password"
+                  {...registerSignUp('password', { required: 'Password is required' })}
+                />
+                {signUpErrors.password && <p className="error-message">{signUpErrors.password.message}</p>}
+              </div>
+            </div>
 
-            <button className='button' type="submit" disabled={isSignUpSubmitting}>
+            <button className='auth-button' type="submit" disabled={isSignUpSubmitting}>
               {isSignUpSubmitting ? 'Signing up...' : 'Sign Up'}
             </button>
+
+            <p className="mobile-switch">
+              Already have an account? <button type="button" onClick={showSignIn}>Sign In</button>
+            </p>
           </form>
         </div>
 
         {/* Sign In Form */}
-        <div className="form-container sign-in-container">
-          <form className='form' onSubmit={handleSubmitSignIn(onSignInSubmit)}>
-            <h1 className='h1'>Sign in</h1>
-            <span className='span'>or use your account</span>
+        <div className="auth-form-container sign-in-container">
+          <form className='auth-form' onSubmit={handleSubmitSignIn(onSignInSubmit)}>
+            <h1 className='auth-title'>Sign in</h1>
+            <p className='auth-subtitle'>Use your student or admin credentials</p>
 
-            <div>
-              <input type="checkbox" name="vehicle1" {...registerSignIn('isAdmin')} onChange={()=>setisAdmin(!isAdmin)} value={isAdmin} />
-              <label for="vehicle1">Login as Admin</label>
+            <div className="auth-form-fields">
+              <label className="admin-toggle">
+                <input
+                  type="checkbox"
+                  {...adminRegister}
+                  onChange={(e) => {
+                    adminRegister.onChange(e);
+                    setisAdmin(e.target.checked);
+                  }}
+                />
+                Login as Admin
+              </label>
+
+              <div className="field">
+                <input
+                  type="text"
+                  className={`auth-input ${signInIdError ? 'input-error' : ''}`}
+                  placeholder={isAdmin ? "Admin ID" : "Student ID"}
+                  autoComplete="username"
+                  {...registerSignIn(isAdmin ? "admin_id" : "student_id", { required: isAdmin ? 'Admin ID is required' : 'Student ID is required' })}
+                />
+                {signInIdError && <p className="error-message">{signInIdError.message}</p>}
+              </div>
+
+              <div className="field">
+                <input
+                  type="password"
+                  className={`auth-input ${signInErrors.password ? 'input-error' : ''}`}
+                  placeholder="Password"
+                  autoComplete="current-password"
+                  {...registerSignIn('password', { required: 'Password is required' })}
+                />
+                {signInErrors.password && <p className="error-message">{signInErrors.password.message}</p>}
+              </div>
             </div>
 
-            <input
-              type="text"
-              className={`input ${signInErrors.student_id ? 'input-error' : ''}`}
-              placeholder={isAdmin ? "Admin ID" : "Student ID"}
-              {...registerSignIn(isAdmin ? "admin_id" : "student_id", { required: isAdmin ? 'Admin ID is required' : 'Student ID is required' })}
-            />
-            {signInErrors.student_id && <p className="error-message">{signInErrors.student_id.message}</p>}
-
-            <input
-              type="password"
-              className={`input ${signInErrors.password ? 'input-error' : ''}`}
-              placeholder="Password"
-              {...registerSignIn('password', { required: 'Password is required' })}
-            />
-            {signInErrors.password && <p className="error-message">{signInErrors.password.message}</p>}
-
-            <button className='button' type="submit" disabled={isSignInSubmitting}>
+            <button className='auth-button' type="submit" disabled={isSignInSubmitting}>
               {isSignInSubmitting ? 'Signing in...' : 'Sign In'}
             </button>
+
+            <p className="mobile-switch">
+              New to Grievance Hub? <button type="button" onClick={showSignUp}>Sign Up</button>
+            </p>
           </form>
         </div>
 
@@ -200,14 +264,14 @@ export default function AuthPanel() {
         <div className="overlay-container">
           <div className="overlay">
             <div className="overlay-panel overlay-left">
-              <h1 className='h1'>Welcome Back!</h1>
-              <p className='p'>To keep connected with us please login with your personal info</p>
-              <button className="button ghost" onClick={() => setIsRightPanelActive(false)}>Sign In</button>
+              <h1 className='auth-title'>Welcome Back!</h1>
+              <p>Sign in with your account to continue tracking and managing grievances.</p>
+              <button type="button" className="auth-button ghost" onClick={showSignIn}>Sign In</button>
             </div>
             <div className="overlay-panel overlay-right">
-              <h1 className='h1'>Hello, Friend!</h1>
-              <p className='p'>Enter your details and start your journey with us</p>
-              <button className="button ghost" onClick={() => setIsRightPanelActive(true)}>Sign Up</button>
+              <h1 className='auth-title'>Hello, Friend!</h1>
+              <p>Create an account to submit complaints and follow their resolution.</p>
+              <button type="button" className="auth-button ghost" onClick={showSignUp}>Sign Up</button>
             </div>
           </div>
         </div>

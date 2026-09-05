@@ -1,6 +1,5 @@
 import React from 'react';
 import '../css/grievanceCard.css';
-import { parse } from 'postcss';
 
 
 const GrievanceCard = ({grievance,setOpenDialog,setcurrGrie}) => {

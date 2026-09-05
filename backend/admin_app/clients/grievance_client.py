@@ -1,10 +1,8 @@
-from config.settings import GRIEVANCE_SERVICE_URL
 from shared.base_client import BaseServiceClient
 
-
 class GrievanceClient(BaseServiceClient):
-    def __init__(self):
-        super().__init__(GRIEVANCE_SERVICE_URL)
+    def __init__(self, base_url):
+        super().__init__(base_url)
 
     def get_all_grievances(self):
         return self.request("GET", "/admin/all_grievance")

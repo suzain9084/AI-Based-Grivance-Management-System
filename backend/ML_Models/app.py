@@ -1,15 +1,14 @@
 import os
 import sys
-
+from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from flask import Flask
 from flask_cors import CORS
-
-from config.settings import FLASK_DEBUG, ML_SERVICE_PORT, init_settings
 from ML_Models.routes.ml_model_routes import ml_model_routes_bp
 
-init_settings("ml_models")
+load_dotenv()
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+ML_SERVICE_PORT = os.getenv("ML_SERVICE_PORT")
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})

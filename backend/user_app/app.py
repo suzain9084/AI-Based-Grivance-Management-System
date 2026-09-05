@@ -5,13 +5,15 @@ sys.path.append(os.getcwd())
 
 from flask import Flask
 from flask_cors import CORS
-
-from config.settings import CONNECTION_STRING, FLASK_DEBUG, USER_SERVICE_PORT, init_settings
+from dotenv import load_dotenv
 from shared.utils.db_utils import db, migrate
 from user_app.routes.user_routes import user_bp
 from user_app.models.user_model import User
 
-init_settings("user_app")
+load_dotenv()
+CONNECTION_STRING = os.getenv("USER_CONNECTION_STRING")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+USER_SERVICE_PORT = os.getenv("USER_SERVICE_PORT")
 
 app = Flask(__name__)
 CORS(app)

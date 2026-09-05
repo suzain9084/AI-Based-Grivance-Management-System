@@ -1,10 +1,13 @@
-from config.settings import ML_SERVICE_URL
-from shared.base_client import BaseServiceClient
 
+from shared.base_client import BaseServiceClient
+import os
+from dotenv import load_dotenv
+load_dotenv()
+ML_SERVICE_URL = os.getenv("ML_SERVICE_URL")
 
 class MLModelClient(BaseServiceClient):
-    def __init__(self):
-        super().__init__(ML_SERVICE_URL)
+    def __init__(self, base_url=ML_SERVICE_URL):
+        super().__init__(base_url)
 
     def speech_to_text(self, audio_buffer, lan):
         audio_buffer.seek(0)

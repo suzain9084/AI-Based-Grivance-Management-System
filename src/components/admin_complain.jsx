@@ -107,7 +107,7 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h5" gutterBottom>{grievance.title}</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -120,7 +120,7 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary">Grievance ID</Typography>
             <Typography variant="body1" gutterBottom>{grievance.id}</Typography>
 
@@ -131,7 +131,7 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
             <Typography variant="body1" gutterBottom>{grievance.studentId}</Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary">Department</Typography>
             <Typography variant="body1" gutterBottom>{grievance.department}</Typography>
 
@@ -140,14 +140,14 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
 
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="subtitle2" color="text.secondary">Description</Typography>
             <Typography variant="body1" paragraph sx={{ mt: 1 }}>
               {grievance.description}
             </Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper
               variant="outlined"
               sx={{

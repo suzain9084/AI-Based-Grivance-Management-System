@@ -1,17 +1,15 @@
 import os
-
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+from dotenv import load_dotenv
 
-from config.settings import GEMINI_API_KEY, init_settings
-
-init_settings("ml_models")
-
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME")
 
 class MLService:
     @staticmethod
     def speechTotext(audio_buffer, lan):
         import speech_recognition as sr
-
         try:
             recognizer = sr.Recognizer()
             with sr.AudioFile(audio_buffer) as source:
@@ -19,7 +17,8 @@ class MLService:
                 try:
                     text = recognizer.recognize_google(audio_data, language=lan)
                     return {"success": True, "text": text, "error": None}
-                except sr.UnknownValueError:
+                except sr.UnknownValueError as error:
+                    print("UnknownValueError: ", error)
                     return {"success": False, "text": "", "error": "Speech was unintelligible."}
                 except sr.RequestError as e:
                     return {"success": False, "text": "", "error": f"API unavailable or request failed: {e}"}
@@ -66,5 +65,6 @@ class MLService:
 
             result = classifier(grie_desc, candidate_labels=labels)
             return result["labels"][0]
-        except Exception:
+        except Exception as e:
+            print("Exception: ", e)
             return None

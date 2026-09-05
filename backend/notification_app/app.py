@@ -6,15 +6,17 @@ sys.path.append(os.getcwd())
 from flask import Flask
 from flask_cors import CORS
 from flask_socketio import SocketIO
-
-from config.settings import CONNECTION_STRING, FLASK_DEBUG, NOTIFICATION_SERVICE_PORT, init_settings
 from notification_app.rabbitMQ.consumer import start_consumer
 from notification_app.router.notification_routes import notification_routes_bp
 from notification_app.services import notification_service
 from notification_app.websockets.connection_manager import ConnectionManager
 from shared.utils.db_utils import db, migrate
+from dotenv import load_dotenv
+load_dotenv()
 
-init_settings("notification_app")
+CONNECTION_STRING = os.getenv("NOTIFICATION_CONNECTION_STRING")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG")
+NOTIFICATION_SERVICE_PORT = os.getenv("NOTIFICATION_SERVICE_PORT")
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})

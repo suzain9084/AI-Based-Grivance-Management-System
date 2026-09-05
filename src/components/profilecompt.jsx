@@ -89,7 +89,7 @@ const Profile = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 3, textAlign: 'center' }}>
               <Avatar
                 sx={{
@@ -119,7 +119,7 @@ const Profile = () => {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={8}>
+          <Grid size={{ xs: 12, md: 8 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Personal Information
@@ -127,7 +127,7 @@ const Profile = () => {
               <Divider sx={{ mb: 3 }} />
 
               <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Full Name"
@@ -136,7 +136,7 @@ const Profile = () => {
                     disabled={!isEditing}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Email"
@@ -145,7 +145,7 @@ const Profile = () => {
                     disabled={!isEditing}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Phone"
@@ -154,7 +154,7 @@ const Profile = () => {
                     disabled={!isEditing}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
                     label="Student ID"

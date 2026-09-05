@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta, timezone
-
 import jwt
+import os
+from dotenv import load_dotenv
 
-from config.settings import JWT_EXPIRY_HOURS, JWT_SECRET
-
+load_dotenv()
+JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS"))
+JWT_SECRET = os.getenv("JWT_SECRET")
 
 def create_access_token(user_id, role, is_admin=False):
     now = datetime.now(timezone.utc)

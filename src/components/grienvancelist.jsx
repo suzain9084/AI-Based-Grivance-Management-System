@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import GrievanceCard from './grievanceCard'
 import "../css/grievancelist.css"
 import refreshIcon from "/refreash.svg"
@@ -32,19 +32,19 @@ const Grienvancelist = () => {
   const [currGrie, setcurrGrie] = useState({})
   const [openDialog, setOpenDialog] = useState(false)
 
-  const get_all_grievance = async () => {
+  const get_all_grievance =  useCallback(async () => {
     let res = await authFetch(apiUrl(`/api/grievances/get_all_grievance/${User.u_id}`), User.token)
     if (res.ok) {
       res = await res.json()
       setGrievances(res)
     }
-  }
+  }, [User.u_id, User.token])
 
   useEffect(() => {
     if (User.u_id) {
       get_all_grievance()
     }
-  }, [User])
+  }, [User, get_all_grievance])
 
   return (
     <div className='grievance-list-cont bg-white'>
@@ -67,7 +67,7 @@ const Grienvancelist = () => {
       </div>
       <div className='grie-card-cont'>
         {grievances.map((grievance) => {
-          return <GrievanceCard grievance={grievance} setOpenDialog={setOpenDialog} setcurrGrie={setcurrGrie}/>
+          return <GrievanceCard key={grievance.id} grievance={grievance} setOpenDialog={setOpenDialog} setcurrGrie={setcurrGrie}/>
         })}
       </div>
       <GrievanceDialog
@@ -129,7 +129,7 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={3}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h5" gutterBottom>{grievance.title}</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
@@ -142,7 +142,7 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary">Grievance ID</Typography>
             <Typography variant="body1" gutterBottom>{grievance.id}</Typography>
 
@@ -153,7 +153,7 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
             <Typography variant="body1" gutterBottom>{grievance.u_id}</Typography>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Typography variant="subtitle2" color="text.secondary">Department</Typography>
             <Typography variant="body1" gutterBottom>{User.department}</Typography>
 
@@ -161,14 +161,14 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
             <Typography variant="body1" gutterBottom>{grievance.c_id}</Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Typography variant="subtitle2" color="text.secondary">Description</Typography>
             <Typography variant="body1" paragraph sx={{ mt: 1 }}>
               {grievance.desc}
             </Typography>
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Paper
               variant="outlined"
               sx={{

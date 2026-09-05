@@ -4,6 +4,8 @@ from flask import request
 
 class BaseServiceClient:
     def __init__(self, base_url):
+        if not base_url:
+            raise ValueError("Base URL is required")
         self.base_url = base_url.rstrip("/")
 
     def _headers(self):

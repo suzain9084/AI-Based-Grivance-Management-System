@@ -5,6 +5,8 @@ from admin_app.clients.user_client import UserClient
 from admin_app.models.admin_model import Admin
 from shared.utils.db_utils import db
 from werkzeug.security import check_password_hash, generate_password_hash
+import os
+from dotenv import load_dotenv
 
 C_ID_TO_COMMITTEE_NAME = {
     1: "examination",
@@ -15,10 +17,13 @@ C_ID_TO_COMMITTEE_NAME = {
     6: "fellowship",
 }
 
+load_dotenv()
+GRIEVANCE_SERVICE_URL = os.getenv("GRIEVANCE_SERVICE_URL")
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
 
 class AdminService:
-    grievance_client = GrievanceClient()
-    user_client = UserClient()
+    grievance_client = GrievanceClient(base_url=GRIEVANCE_SERVICE_URL)
+    user_client = UserClient(base_url=USER_SERVICE_URL)
 
     @staticmethod
     def signup(data):

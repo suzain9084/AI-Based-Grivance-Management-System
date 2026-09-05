@@ -45,7 +45,7 @@ const StatCard = ({ title, value, trend }) => (
   </Card>
 );
 
-const QuickActionCard = ({ title, description, icon, action }) => (
+const QuickActionCard = ({ title, description, action }) => (
   <Card sx={{ height: '100%' }}>
     <CardContent>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -68,7 +68,7 @@ const Dashboard = () => {
 
   const [stats, setstats] = useState([])
   const [activity, setacivity] = useState([])
-  const { User, setUser } = useContext(userContext)
+  const { User } = useContext(userContext)
   // const stats = [
   //   {
   //     title: 'Total Complaints',
@@ -119,15 +119,22 @@ const Dashboard = () => {
     },
   ];
 
-  let desktopOS = () => { 
-    return [
-          { id: 1, value: stats[0].value, label: 'Total Complain', color: '#9c27b0' },
-          { id: 0, value: stats[1].value, label: 'Resolved', color: '#4caf50' },
-          { id: 2, value: stats[2].value, label: 'Pending', color: '#1976d2' }
-    ]
+  const getStatValue = (title) => {
+    const stat = stats.find((item) => item.title === title);
+    return Number(stat?.value) || 0;
   };
 
-  const valueFormatter = (value) => `${value}%`;
+  const pieData = [
+    { id: 0, value: getStatValue('Resolved'), label: 'Resolved', color: '#4caf50' },
+    { id: 1, value: getStatValue('Pending'), label: 'Pending', color: '#1976d2' },
+  ];
+
+  const valueFormatter = (item) => {
+    const value = Number(item?.value ?? item) || 0;
+    const total = pieData.reduce((sum, slice) => sum + slice.value, 0);
+    const percent = total ? Math.round((value / total) * 100) : 0;
+    return `${percent}%`;
+  };
 
   return (
     <div className='profile-cont'>
@@ -138,14 +145,14 @@ const Dashboard = () => {
 
         <Grid container spacing={3.1} sx={{ mb: 4 }}>
           {stats.map((stat, index) => (
-            <Grid item xs={12} md={4} key={index}>
+            <Grid size={{ xs: 12, md: 4 }} key={index}>
               <StatCard {...stat} />
             </Grid>
           ))}
           {stats.length > 0 && <PieChart
             series={[
               {
-                data: desktopOS(),
+                data: pieData,
                 highlightScope: { fade: 'global', highlight: 'item' },
                 faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
                 valueFormatter,
@@ -156,7 +163,7 @@ const Dashboard = () => {
         </Grid>
 
         <Grid container spacing={3}>
-          {activity.length > 0 && <Grid item xs={12} md={8}>
+          {activity.length > 0 && <Grid size={{ xs: 12, md: 8 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Recent Activity
@@ -198,10 +205,10 @@ const Dashboard = () => {
               </Box>
             </Paper>
           </Grid>}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Grid container spacing={2}>
               {quickActions.map((action, index) => (
-                <Grid item xs={12} key={index}>
+                <Grid size={12} key={index}>
                   <QuickActionCard {...action} />
                 </Grid>
               ))}
