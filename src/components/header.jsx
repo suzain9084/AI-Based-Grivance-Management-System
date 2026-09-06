@@ -7,18 +7,21 @@ import { useContext } from 'react'
 
 const Header = () => {
     const navigate = useNavigate()
-    const {User} = useContext(userContext)
+    const { User, isLoggedIn } = useContext(userContext)
     return (
-        <div className='header-cont bg-white'>
+        <div className='header-cont'>
             <div>
                 <div className='header-text'>
                     <h2>Grievance Hub</h2>
+                    <p>{isLoggedIn ? (User.isAdmin ? "Admin workspace" : "Track and resolve campus issues") : "Sign in to submit and track grievances"}</p>
                 </div>
                 <div className='add-grievance-cont'>
-                    {!User.isAdmin && <div className='add-grievance-button' onClick={()=>navigate("/addGrievance")}>
-                        <img src={plusIcon} alt=""/>
-                        <p>Add a Grievance</p>
-                    </div>}
+                    {isLoggedIn && !User.isAdmin && (
+                        <div className='add-grievance-button' onClick={() => navigate("/addGrievance")}>
+                            <img src={plusIcon} alt="" />
+                            <p>Add a Grievance</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

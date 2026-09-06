@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -40,6 +40,9 @@ import {
 } from '@mui/icons-material';
 import { userContext } from '../context/usercontext';
 import { apiUrl, authFetch } from '../utils/api';
+import { useGrievanceAudio } from '../utils/useGrievanceAudio';
+import { useToast } from '../context/toastcontext';
+import { EmptyState, GuestPrompt, LoadingState } from './uiStates';
 
 const departments = [
   'All Departments',
@@ -60,35 +63,55 @@ const categories = [
   'Fellowship',
 ];
 
-export const GrievanceDialog = ({ open, onClose, grievance }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(grievance?.audioUrl));
+const STATUS_OPTIONS = ['Pending', 'In Progress', 'Resolved'];
 
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
+export const GrievanceDialog = ({ open, onClose, grievance, onStatusUpdated }) => {
+  const { User } = useContext(userContext);
+  const { showToast } = useToast();
+  const [status, setStatus] = useState(grievance?.status || 'Pending');
+  const [saving, setSaving] = useState(false);
+  const { isPlaying, hasAudio, loading: audioLoading, togglePlay } = useGrievanceAudio({
+    grievanceId: grievance?.id,
+    token: User.token,
+    enabled: open,
+  });
 
   useEffect(() => {
-    audio.addEventListener('ended', () => setIsPlaying(false));
-    return () => {
-      audio.removeEventListener('ended', () => setIsPlaying(false));
-      audio.pause();
-    };
-  }, [audio]);
+    setStatus(grievance?.status || 'Pending');
+  }, [grievance?.id, grievance?.status]);
 
   if (!grievance) return null;
 
-  const getStatusColor = (status) => {
-    switch (status) {
+  const getStatusColor = (value) => {
+    switch (value) {
       case 'Resolved': return 'success';
       case 'Pending': return 'warning';
       case 'In Progress': return 'info';
       default: return 'default';
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!grievance.id || !status || status === grievance.status) return;
+    setSaving(true);
+    try {
+      const res = await authFetch(apiUrl(`/api/admin/update_status/${grievance.id}`), User.token, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const nextStatus = data.status || status;
+        showToast('Grievance status updated', 'success');
+        onStatusUpdated?.(grievance.id, nextStatus);
+      } else {
+        showToast(data.message || 'Failed to update status', 'error');
+      }
+    } catch (error) {
+      showToast(error.message || 'Failed to update status', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -100,7 +123,7 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
       fullWidth
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Grievance Details</Typography>
+        <Typography variant="h6" component="span">Grievance Details</Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
@@ -110,7 +133,7 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
           <Grid size={12}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h5" gutterBottom>{grievance.title}</Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Chip
                   label={grievance.status}
                   color={getStatusColor(grievance.status)}
@@ -148,6 +171,21 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
           </Grid>
 
           <Grid size={12}>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel>Update Status</InputLabel>
+              <Select
+                label="Update Status"
+                value={STATUS_OPTIONS.includes(status) ? status : 'Pending'}
+                onChange={(event) => setStatus(event.target.value)}
+              >
+                {STATUS_OPTIONS.map((option) => (
+                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid size={12}>
             <Paper
               variant="outlined"
               sx={{
@@ -159,11 +197,12 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
               }}
             >
               <IconButton
-                onClick={handlePlayPause}
+                onClick={togglePlay}
+                disabled={!hasAudio || audioLoading}
                 sx={{
-                  bgcolor: 'primary.main',
+                  bgcolor: hasAudio ? 'primary.main' : 'grey.400',
                   color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' }
+                  '&:hover': { bgcolor: hasAudio ? 'primary.dark' : 'grey.400' }
                 }}
               >
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
@@ -173,7 +212,11 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
                   Audio Recording
                 </Typography>
                 <Typography variant="body2">
-                  Click to {isPlaying ? 'pause' : 'play'} the grievance audio
+                  {audioLoading
+                    ? 'Loading audio...'
+                    : hasAudio
+                      ? `Click to ${isPlaying ? 'pause' : 'play'} the grievance audio`
+                      : 'No audio recording for this grievance'}
                 </Typography>
               </Box>
             </Paper>
@@ -182,14 +225,23 @@ export const GrievanceDialog = ({ open, onClose, grievance }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
+        <Button
+          variant="contained"
+          onClick={handleUpdateStatus}
+          disabled={saving || !status || status === grievance.status}
+        >
+          {saving ? 'Updating...' : 'Update Status'}
+        </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
 const AdminComplain = () => {
-  const {User} = useContext(userContext)
+  const {User, isLoggedIn} = useContext(userContext)
+  const { showToast } = useToast()
   const [mockComplaints,setmockComplaints] = useState([])
+  const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filters, setFilters] = useState({
@@ -255,19 +307,44 @@ const AdminComplain = () => {
     setDialogOpen(true);
   };
 
-  const fetch_complains = async() => {
-    let res = await authFetch(apiUrl("/api/admin/get_all_grievance"), User.token)
-    if(res.ok){
-      let data = await res.json()
-      setmockComplaints(data)
+  const handleStatusUpdated = (grievanceId, nextStatus) => {
+    setmockComplaints((prev) =>
+      prev.map((item) => (item.id === grievanceId ? { ...item, status: nextStatus } : item))
+    );
+    setSelectedGrievance((prev) =>
+      prev && prev.id === grievanceId ? { ...prev, status: nextStatus } : prev
+    );
+  };
+
+  const fetch_complains = useCallback(async() => {
+    if (!User.admin_id) return;
+    setLoading(true);
+    try {
+      let res = await authFetch(apiUrl("/api/admin/get_all_grievance"), User.token)
+      if(res.ok){
+        let data = await res.json()
+        setmockComplaints(data)
+      } else {
+        showToast("Failed to load grievances", "error")
+      }
+    } catch (error) {
+      showToast(error.message || "Failed to load grievances", "error")
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [User.admin_id, User.token, showToast])
 
   useEffect(() => {
-    if (User.admin_id) {
-      fetch_complains()
-    }
-  }, [])
+    fetch_complains();
+  }, [fetch_complains]);
+
+  if (!isLoggedIn) {
+    return (
+      <div className='profile-cont'>
+        <GuestPrompt description="Sign in as an admin to review student grievances." />
+      </div>
+    );
+  }
 
   return (
     <div className='profile-cont'>
@@ -317,8 +394,9 @@ const AdminComplain = () => {
                     onChange={handleFilterChange}
                   >
                     <MenuItem value="all">All Status</MenuItem>
-                    <MenuItem value="Resolved">Resolved</MenuItem>
                     <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="In Progress">In Progress</MenuItem>
+                    <MenuItem value="Resolved">Resolved</MenuItem>
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -363,10 +441,26 @@ const AdminComplain = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    { mockComplaints.length > 0 && filteredComplaints()
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((complaint) => (
-                        <TableRow key={complaint.id} hover onClick={() => handleGrievanceClick(complaint)}>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7}>
+                          <LoadingState label="Loading grievances..." />
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredComplaints().length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7}>
+                          <EmptyState
+                            title="No grievances found"
+                            description="Try adjusting your search or filters."
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredComplaints()
+                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                        .map((complaint) => (
+                        <TableRow key={complaint.id} hover onClick={() => handleGrievanceClick(complaint)} sx={{ cursor: 'pointer' }}>
                           <TableCell>{complaint.id}</TableCell>
                           <TableCell>{complaint.title}</TableCell>
                           <TableCell>
@@ -382,7 +476,8 @@ const AdminComplain = () => {
                           <TableCell>{getStatusChip(complaint.status)}</TableCell>
                           <TableCell>{complaint.date}</TableCell>
                         </TableRow>
-                      ))}
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -402,6 +497,7 @@ const AdminComplain = () => {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           grievance={selectedGrievance}
+          onStatusUpdated={handleStatusUpdated}
         />
       </Box>
     </div>

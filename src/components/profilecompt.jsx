@@ -12,7 +12,6 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
-  withTheme,
 } from '@mui/material';
 import {
   School,
@@ -23,11 +22,14 @@ import {
 
 import { userContext } from "../context/usercontext.jsx"
 import { apiUrl, authFetch } from "../utils/api.js"
+import { useToast } from "../context/toastcontext.jsx"
+import { GuestPrompt } from "./uiStates.jsx"
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const { User, setUser } = useContext(userContext)
-  const [copyUser, setcopyUser] = useState({})
+  const [saving, setSaving] = useState(false);
+  const { User, setUser, isLoggedIn } = useContext(userContext)
+  const { showToast } = useToast()
 
   const [name, setName] = useState(null)
   const [email, setEmail] = useState(null)
@@ -42,6 +44,7 @@ const Profile = () => {
   }, [isEditing, User, phone, email, name]);
 
   const handleSave = useCallback(async () => {
+    setSaving(true);
     try {
       let data = {
         u_id: User.u_id,
@@ -60,16 +63,17 @@ const Profile = () => {
       let resData = await res.json()
       if (res.status == 200) {
         setUser(resData)
-        alert("Changes saved successfully");
+        showToast("Changes saved successfully", "success");
       } else {
-        alert("Failed to save changes");
+        showToast("Failed to save changes", "error");
       }
     } catch (error) {
-      alert("An error occurred: " + error.message);
+      showToast(error.message || "An error occurred while saving", "error");
     } finally {
       setIsEditing(false);
+      setSaving(false);
     }
-  }, [User, email, phone, name]);
+  }, [User, email, phone, name, setUser, showToast]);
 
   const handleChange = useCallback((field) => (event) => {
     if (field == 'name') {
@@ -80,6 +84,14 @@ const Profile = () => {
       setPhone(event.target.value)
     }
   }, [name, email, phone, User]);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="profile-cont">
+        <GuestPrompt description="Sign in to view and update your profile." />
+      </div>
+    );
+  }
 
   return (
     <div className="profile-cont">
@@ -112,9 +124,10 @@ const Profile = () => {
                 variant="outlined"
                 startIcon={isEditing ? <Save /> : <Edit />}
                 onClick={isEditing ? handleSave : handleEdit}
-                sx={{ mt: 2, backgroundColor: 'black', borderRadius: '3px', color: 'white' }}
+                disabled={saving}
+                sx={{ mt: 2, backgroundColor: 'black', borderRadius: '10px', color: 'white' }}
               >
-                {isEditing ? 'Save Changes' : 'Edit Profile'}
+                {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
               </Button>
             </Paper>
           </Grid>

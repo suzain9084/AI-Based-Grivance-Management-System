@@ -122,3 +122,7 @@ class AdminService:
     @staticmethod
     def get_line_graph_data(time_range):
         return AdminService.grievance_client.get_line_graph_data(time_range)
+
+    @staticmethod
+    def update_status(grievance_id, status):
+        return AdminService.grievance_client.update_status(grievance_id, status)

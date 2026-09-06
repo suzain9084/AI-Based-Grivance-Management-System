@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,8 +18,13 @@ import {
   InputLabel,
 } from '@mui/material';
 import { Save } from '@mui/icons-material';
+import { userContext } from '../context/usercontext';
+import { useToast } from '../context/toastcontext';
+import { GuestPrompt } from './uiStates';
 
 const Settings = () => {
+  const { isLoggedIn } = useContext(userContext);
+  const { showToast } = useToast();
   const [settings, setSettings] = useState({
     notifications: true,
     emailUpdates: true,
@@ -43,9 +48,16 @@ const Settings = () => {
   };
 
   const handleSave = () => {
-    // Here you would typically make an API call to save the settings
-    console.log('Settings saved:', settings);
+    showToast("Settings saved successfully", "success");
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className="profile-cont">
+        <GuestPrompt description="Sign in to manage your notification and appearance settings." />
+      </div>
+    );
+  }
 
   return (
     <div className="profile-cont">

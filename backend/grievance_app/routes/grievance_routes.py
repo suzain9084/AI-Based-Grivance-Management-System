@@ -83,3 +83,9 @@ def get_admin_stat_card(this_month, this_year, last_month, last_month_year):
 @admin_required
 def get_admin_line_graph_data(time_range):
     return GrievanceController.get_line_graph_data(time_range)
+
+@grievance_bp.route("/admin/update_status/<grievance_id>", methods=["PUT"])
+@admin_required
+def update_status(grievance_id):
+    status = request.json.get("status")
+    return GrievanceController.update_status(grievance_id, status)

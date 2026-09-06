@@ -21,6 +21,8 @@ class AdminController:
 
     @staticmethod
     def login(data):
+        if not data or not data.get("admin_id") or not data.get("password"):
+            return AdminView.render_error("Admin ID and password are required"), 400
         res, admin = AdminService.login(data)
         if res:
             token = create_access_token(admin.admin_id, role="admin", is_admin=True)
@@ -77,4 +79,17 @@ class AdminController:
         res, data = AdminService.get_line_graph_data(time_range)
         if res:
             return AdminView.render_line_graph_data(time_range, data), 200
+        return AdminView.render_error(data), 500
+
+    ALLOWED_STATUSES = {"Pending", "In Progress", "Resolved"}
+
+    @staticmethod
+    def update_status(grievance_id, status):
+        if not status:
+            return AdminView.render_error("Status is required"), 400
+        if status not in AdminController.ALLOWED_STATUSES:
+            return AdminView.render_error("Invalid status"), 400
+        res, data = AdminService.update_status(grievance_id, status)
+        if res:
+            return AdminView.render_grievance(data), 200
         return AdminView.render_error(data), 500

@@ -35,6 +35,8 @@ import {
 } from 'recharts';
 import { userContext } from '../context/usercontext';
 import { apiUrl, authFetch } from '../utils/api';
+import { useToast } from '../context/toastcontext';
+import { GuestPrompt, LoadingState } from './uiStates';
 
 const StatCard = ({ title, value, trend }) => (
   <Card sx={{ height: '100%' }}>
@@ -83,9 +85,11 @@ const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('6');
   const [reportType, setReportType] = useState('All Complaints');
   const [categoryData, setcategoryData] = useState([])
-  const { User } = useContext(userContext)
+  const { User, isLoggedIn } = useContext(userContext)
+  const { showToast } = useToast()
   const [stateCard, setstateCard] = useState([])
   const [monthlyData, setmonthlyData] = useState([])
+  const [loading, setLoading] = useState(false)
 
   const fetch_bar_plot_data = async () => {
     let res = await authFetch(apiUrl(`/api/admin/grievanceCategory/${reportType}/${timeRange}`), User.token)
@@ -112,12 +116,23 @@ const AdminDashboard = () => {
   }
 
   useEffect(() => {
-    if (User.admin_id) {
-      fetch_bar_plot_data()
-      fetch_state_card_data()
-      fetch_monthly_data()
-    }
-  }, [timeRange, reportType])
+    const loadAdminDashboard = async () => {
+      if (!User.admin_id) return;
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetch_bar_plot_data(),
+          fetch_state_card_data(),
+          fetch_monthly_data(),
+        ]);
+      } catch (error) {
+        showToast(error.message || "Failed to load dashboard", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAdminDashboard();
+  }, [timeRange, reportType, User.admin_id])
 
   const get_range_of_values = () => {
     if (categoryData.length > 0) {
@@ -133,6 +148,14 @@ const AdminDashboard = () => {
         max_val
       ];
     }
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <div className='profile-cont'>
+        <GuestPrompt description="Sign in as an admin to view grievance analytics." />
+      </div>
+    );
   }
 
   return (
@@ -178,7 +201,9 @@ const AdminDashboard = () => {
           </Box>
         </Box>
 
-        {stateCard.length > 0 && <Grid container spacing={3} sx={{ mb: 4 }}>
+        {loading && <LoadingState label="Loading analytics..." />}
+
+        {!loading && stateCard.length > 0 && <Grid container spacing={3} sx={{ mb: 4 }}>
           {stateCard.map((stat, index)=>{
             return( <Grid size={{ xs: 12, md: 4 }} key={index}>
                           <StatCard {...stat} />
@@ -186,7 +211,7 @@ const AdminDashboard = () => {
           })}
         </Grid>}
 
-        {monthlyData.length > 0 && <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 4 }}>
+        {!loading && monthlyData.length > 0 && <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Monthly Trends
           </Typography>
@@ -227,7 +252,7 @@ const AdminDashboard = () => {
           </Box>
         </Paper>}
 
-        {categoryData.length > 0 && <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 4 }}>
+        {!loading && categoryData.length > 0 && <Paper elevation={1} sx={{ p: 3, borderRadius: 2, mb: 4 }}>
           <Typography variant="h6" sx={{ mb: 2 }}>
             Complaints by Category
           </Typography>

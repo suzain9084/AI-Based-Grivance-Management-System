@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { userContext } from '../context/usercontext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { apiUrl } from '../utils/api';
+import { useToast } from '../context/toastcontext';
 
 
 export default function AuthPanel() {
@@ -11,6 +12,7 @@ export default function AuthPanel() {
   const [isRightPanelActive, setIsRightPanelActive] = useState(location.pathname === '/signup');
   const [isAdmin, setisAdmin] = useState(false);
   const { setUser } = useContext(userContext);
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,18 +57,18 @@ export default function AuthPanel() {
       const resData = await response.json();
 
       if (response.status === 400) {
-        alert("Student ID or Email already exists");
+        showToast("Student ID or Email already exists", "error");
       } else if (response.status === 201) {
-        alert("Sign up successful");
+        showToast("Sign up successful", "success");
         setUser(resData);
         navigate("/");
       } else {
-        alert("Internal Server Error, Try again later.");
+        showToast("Internal server error. Try again later.", "error");
       }
     } catch (error) {
-      alert("Error: " + error.message);
+      showToast(error.message || "Unable to sign up", "error");
     }
-  }, [navigate, setUser]);
+  }, [navigate, setUser, showToast]);
 
 
   const onSignInSubmit = useCallback(async (data) => {
@@ -78,7 +80,10 @@ export default function AuthPanel() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify({
+            admin_id: data.admin_id || data.student_id,
+            password: data.password,
+          })
         });
       } else {
         response = await fetch(apiUrl("/api/users/login"), {
@@ -86,7 +91,10 @@ export default function AuthPanel() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify({
+            student_id: data.student_id || data.admin_id,
+            password: data.password,
+          })
         });
       }
 
@@ -94,17 +102,17 @@ export default function AuthPanel() {
 
       if (response.status === 200) {
         setUser(resData);
-        alert("Login successful");
+        showToast("Login successful", "success");
         navigate("/");
       } else if (response.status === 401) {
-        alert("Invalid Student ID or Password");
+        showToast("Invalid ID or password", "error");
       } else {
-        alert("Internal Server Error");
+        showToast("Internal server error", "error");
       }
     } catch (error) {
-      alert("Error: " + error.message);
+      showToast(error.message || "Unable to sign in", "error");
     }
-  }, [navigate, setUser]);
+  }, [navigate, setUser, showToast]);
 
 
   return (

@@ -7,7 +7,7 @@
   justify-content: center;
   gap: 16px;
   padding: 16px;
-  background-color: antiquewhite;
+  background: linear-gradient(160deg, #f8f3ea 0%, #efe4d2 55%, #e8d8c3 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
 }
@@ -32,7 +32,8 @@
 .auth-container {
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 16px 40px rgba(68, 47, 22, 0.12);
+  border: 1px solid #ece4d4;
   position: relative;
   overflow: hidden;
   width: 900px;

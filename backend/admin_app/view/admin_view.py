@@ -77,6 +77,10 @@ class AdminView:
         return jsonify(data)
 
     @staticmethod
+    def render_grievance(data):
+        return jsonify(data)
+
+    @staticmethod
     def render_line_graph_data(time_range, data):
         month_names = [
             "January",

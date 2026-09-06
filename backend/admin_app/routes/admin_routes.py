@@ -48,3 +48,9 @@ def get_stat_card_data():
 @admin_required
 def get_line_graph_data(time_range):
     return AdminController.get_line_graph_data(time_range)
+
+@admin_bp.route("/update_status/<grievance_id>", methods=["PUT"])
+@admin_required
+def update_status(grievance_id):
+    status = (request.json or {}).get("status")
+    return AdminController.update_status(grievance_id, status)

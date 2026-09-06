@@ -20,10 +20,13 @@ class GrievanceView:
             "desc": grievance.desc,
             "language": grievance.language,
             "u_id": grievance.u_id,
-            "c_id": grievance.c_id,
+            "c_id": c_id_to_comittee_name.get(grievance.c_id),
             "status": grievance.status,
             "time_stamp": grievance.time_stamp.isoformat()
             if grievance.time_stamp
+            else None,
+            "updated_at": grievance.updated_at.isoformat()
+            if grievance.updated_at
             else None,
         }
 
@@ -39,8 +42,8 @@ class GrievanceView:
     def render_audio(blob_data):
         try:
             audio_stream = BytesIO(blob_data)
-            response = make_response(send_file(audio_stream, mimetype="audio/mpeg"))
-            response.headers["Content-Disposition"] = "inline; filename=audio.mp3"
+            response = make_response(send_file(audio_stream, mimetype="audio/webm"))
+            response.headers["Content-Disposition"] = "inline; filename=audio.webm"
             return response
         except Exception as e:
             print(f"Error processing audio data: {e}")
@@ -72,6 +75,12 @@ class GrievanceView:
                 "trend": this_month_data.get("Pending", 0)
                 - last_month_data.get("Pending", 0),
             },
+            {
+                "title": "In Progress",
+                "value": this_month_data.get("In Progress", 0),
+                "trend": this_month_data.get("In Progress", 0)
+                - last_month_data.get("In Progress", 0),
+            }
         ]
         return jsonify(result)
 

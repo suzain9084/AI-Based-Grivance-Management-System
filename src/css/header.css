@@ -1,15 +1,16 @@
 .header-cont {
     width: 100%;
     height: 60px;
-    /* border: solid black 1px; */
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 8px;
+    border-radius: 16px;
+    background-color: #fffefb;
+    border: 1px solid #ece4d4;
+    box-shadow: 0 8px 20px rgba(68, 47, 22, 0.05);
 }
 
 .header-cont > div{
-    /* border: solid black 2px; */
     width: 94%;
     height: 100%;
     display: flex;
@@ -20,25 +21,36 @@
 .add-grievance-button{
     display: flex;
     gap: 10px;
-    height: 90%;
+    height: 42px;
     width: auto;
-    padding: 10px;
+    padding: 0 14px;
     border-radius: 10px;
     cursor: pointer;
-    background-color: black;
+    background-color: #111827;
     color: white;
+    align-items: center;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .add-grievance-button:hover{
-    background-color: rgb(52, 52, 52);
+    background-color: #1f2937;
+    transform: translateY(-1px);
 }
 
 .add-grievance-button > img {
-    width: 25px;
+    width: 20px;
     filter: invert(100%);
 }
 
 .header-text > h2 {
-    font-weight: bold;
-    font-size: 1.2rem;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #1c1917;
+}
+
+.header-text > p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: #78716c;
 }

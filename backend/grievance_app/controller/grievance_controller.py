@@ -178,3 +178,10 @@ class GrievanceController:
                 200,
             )
         return GrievanceController._error(line_graph_data)
+
+    @staticmethod
+    def update_status(grievance_id, status):
+        res, data = GrievanceService.update_status(grievance_id, status)
+        if res:
+            return GrievanceView.render_grievance(data), 200
+        return GrievanceController._error(data), 500

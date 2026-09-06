@@ -18,3 +18,10 @@ class GrievanceClient(BaseServiceClient):
 
     def get_line_graph_data(self, time_range):
         return self.request("GET", f"/admin/get_line_graph_data/{time_range}")
+
+    def update_status(self, grievance_id, status):
+        return self.request(
+            "PUT",
+            f"/admin/update_status/{grievance_id}",
+            json={"status": status},
+        )

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   Box,
   Container,
@@ -8,28 +8,28 @@ import {
   Button,
   Avatar,
   Grid,
-  IconButton,
-  Alert,
 } from '@mui/material';
 import {
   Edit as EditIcon,
   Save as SaveIcon,
-  PhotoCamera as PhotoCameraIcon,
 } from '@mui/icons-material';
+import { userContext } from '../context/usercontext';
+import { useToast } from '../context/toastcontext';
+import { GuestPrompt } from './uiStates';
+import { apiUrl, authFetch } from '../utils/api';
 
 
 const AdminProfileSettings = () => {
-  const [formData, setFormData] = useState({
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 890',
-    commitee: 'Computer Science',
-    designation: 'Professor',
-    bio: 'Experienced professor with expertise in computer science and software engineering.',
-  });
-
+  const { User, setUser, isLoggedIn } = useContext(userContext);
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: User.full_name || '',
+    email: User.email || '',
+    phone: User.phone || '',
+    commitee: User.committee || User.department || '',
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,12 +39,42 @@ const AdminProfileSettings = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsEditing(false);
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    setSaving(true);
+    try {
+      const res = await authFetch(apiUrl("/api/admin/update"), User.token, {
+        method: 'PUT',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          admin_id: User.admin_id,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+        }),
+      });
+      const resData = await res.json();
+      if (res.status === 200) {
+        setUser({ ...User, ...resData });
+        showToast("Profile updated successfully", "success");
+        setIsEditing(false);
+      } else {
+        showToast(resData.message || "Failed to update profile", "error");
+      }
+    } catch (error) {
+      showToast(error.message || "Failed to update profile", "error");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!isLoggedIn) {
+    return (
+      <div className='profile-cont'>
+        <GuestPrompt description="Sign in as an admin to manage your profile." />
+      </div>
+    );
+  }
 
   return (
     <div className='profile-cont'>
@@ -55,28 +85,24 @@ const AdminProfileSettings = () => {
           flexGrow: 1,
           height: '100%',
           overflow: 'auto',
-          backgroundColor: 'background.default',
-          p: 3,
+          backgroundColor: 'transparent',
+          p: 1,
         }}
       >
         <Container maxWidth="lg">
-          {showAlert && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Profile updated successfully!
-            </Alert>
-          )}
-          
-          <Paper elevation={3} sx={{ p: 4 }}>
+          <Paper elevation={0} sx={{ p: 4, border: '1px solid #ece4d4', borderRadius: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
               <Typography variant="h4" gutterBottom>
                 Profile Settings
               </Typography>
               <Button
-                variant="outlined"
+                variant="contained"
                 startIcon={isEditing ? <SaveIcon /> : <EditIcon />}
+                disabled={saving}
                 onClick={() => isEditing ? handleSubmit() : setIsEditing(true)}
+                sx={{ backgroundColor: '#111827' }}
               >
-                {isEditing ? 'Save Changes' : 'Edit Profile'}
+                {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
               </Button>
             </Box>
 
@@ -86,18 +112,14 @@ const AdminProfileSettings = () => {
                   width: 120,
                   height: 120,
                   mb: 2,
+                  bgcolor: '#111827',
+                  fontSize: '2.4rem',
                 }}
-                src="/path-to-profile-image.jpg"
-              />
-              <IconButton
-                color="primary"
-                aria-label="upload picture"
-                component="label"
-                sx={{ mb: 2 }}
               >
-                <input hidden accept="image/*" type="file" />
-                <PhotoCameraIcon />
-              </IconButton>
+                {(User.full_name || 'A').charAt(0).toUpperCase()}
+              </Avatar>
+              <Typography variant="h6">{User.full_name}</Typography>
+              <Typography color="text.secondary">Administrator</Typography>
             </Box>
 
             <form onSubmit={handleSubmit}>
@@ -135,8 +157,8 @@ const AdminProfileSettings = () => {
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <TextField
                     fullWidth
-                    label="Commitee"
-                    name="Commitee"
+                    label="Committee"
+                    name="commitee"
                     value={formData.commitee}
                     onChange={handleChange}
                     disabled={!isEditing}
@@ -152,4 +174,4 @@ const AdminProfileSettings = () => {
   );
 };
 
-export default AdminProfileSettings; 
+export default AdminProfileSettings;

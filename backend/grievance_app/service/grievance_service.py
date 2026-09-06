@@ -32,7 +32,7 @@ class GrievanceService:
     @staticmethod
     def get_grievances_for_user(user_id):
         try:
-            grievances = Grievance.query.filter_by(u_id=user_id)
+            grievances = db.session.query(Grievance.g_id, Grievance.title, Grievance.desc, Grievance.status, Grievance.time_stamp, Grievance.updated_at, Grievance.c_id, Grievance.u_id, Grievance.language).filter_by(u_id=user_id).all()
             return True, grievances
         except Exception as error:
             return False, str(error)
@@ -217,5 +217,18 @@ class GrievanceService:
                 .all()
             )
             return True, result
+        except Exception as err:
+            return False, str(err)
+
+    @staticmethod
+    def update_status(grievance_id, status):
+        try:
+            grievance = Grievance.query.filter_by(g_id=grievance_id).first()
+            if not grievance:
+                return False, "Grievance not found"
+            grievance.status = status
+            grievance.updated_at = datetime.now()
+            db.session.commit()
+            return True, grievance
         except Exception as err:
             return False, str(err)

@@ -17,11 +17,13 @@ import {
   Add,
   TrendingUp,
   TrendingDown,
-  RestaurantMenuRounded,
 } from '@mui/icons-material';
 import { PieChart } from '@mui/x-charts/PieChart';
 import { userContext } from '../context/usercontext';
 import { apiUrl, authFetch } from '../utils/api';
+import { useToast } from '../context/toastcontext';
+import { GuestPrompt, LoadingState } from './uiStates';
+import { useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value, trend }) => (
   <Card sx={{ height: '100%' }}>
@@ -68,30 +70,19 @@ const Dashboard = () => {
 
   const [stats, setstats] = useState([])
   const [activity, setacivity] = useState([])
-  const { User } = useContext(userContext)
-  // const stats = [
-  //   {
-  //     title: 'Total Complaints',
-  //     value: '156',
-  //     trend: 12,
-  //   },
-  //   {
-  //     title: 'Resolved',
-  //     value: '89',
-  //     trend: 8,
-  //   },
-  //   {
-  //     title: 'Pending',
-  //     value: '67',
-  //     trend: -5,
-  //   },
-  // ];
+  const [loading, setLoading] = useState(false)
+  const { User, isLoggedIn } = useContext(userContext)
+  const { showToast } = useToast()
+  const navigate = useNavigate()
 
   const fetch_stats_data = async() =>{
     let res = await authFetch(apiUrl(`/api/grievances/get_data_statcard/${User.u_id}`), User.token)
     if (res.ok) {
       let stats_data = await res.json()
       setstats(stats_data)
+      console.log(stats_data)
+    } else {
+      showToast("Failed to load dashboard stats", "error")
     }
   }
 
@@ -100,22 +91,33 @@ const Dashboard = () => {
     if(res.ok){
       let data = await res.json()
       setacivity(data)
+    } else {
+      showToast("Failed to load recent activity", "error")
     }
   }
 
   useEffect(() => {
-    if(User.u_id){
-        fetch_stats_data()
-        fetch_recent_acivity_data()
-    }
-  }, [])
+    const loadDashboard = async () => {
+      if (!User.u_id) return;
+      setLoading(true);
+      try {
+        await Promise.all([fetch_stats_data(), fetch_recent_acivity_data()]);
+      } catch (error) {
+        showToast(error.message || "Failed to load dashboard", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDashboard();
+  }, [User.u_id])
   
 
   const quickActions = [
     {
       title: 'New Complaint',
       description: 'Submit a new grievance or complaint',
-      icon: <Add color="primary" />
+      icon: <Add color="primary" />,
+      action: () => navigate("/addGrievance"),
     },
   ];
 
@@ -127,6 +129,7 @@ const Dashboard = () => {
   const pieData = [
     { id: 0, value: getStatValue('Resolved'), label: 'Resolved', color: '#4caf50' },
     { id: 1, value: getStatValue('Pending'), label: 'Pending', color: '#1976d2' },
+    { id: 2, value: getStatValue('In Progress'), label: 'In Progress', color: '#ff9800' },
   ];
 
   const valueFormatter = (item) => {
@@ -136,6 +139,22 @@ const Dashboard = () => {
     return `${percent}%`;
   };
 
+  if (!isLoggedIn) {
+    return (
+      <div className='profile-cont'>
+        <GuestPrompt description="Sign in to see your complaint stats and recent activity." />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className='profile-cont'>
+        <LoadingState label="Loading dashboard..." />
+      </div>
+    );
+  }
+
   return (
     <div className='profile-cont'>
       <Box>
@@ -144,6 +163,11 @@ const Dashboard = () => {
         </Typography>
 
         <Grid container spacing={3.1} sx={{ mb: 4 }}>
+          {stats.length === 0 && (
+            <Grid size={12}>
+              <Typography color="text.secondary">No dashboard stats available yet.</Typography>
+            </Grid>
+          )}
           {stats.map((stat, index) => (
             <Grid size={{ xs: 12, md: 4 }} key={index}>
               <StatCard {...stat} />

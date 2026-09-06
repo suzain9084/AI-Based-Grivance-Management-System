@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react'
 import GrievanceCard from './grievanceCard'
 import "../css/grievancelist.css"
 import refreshIcon from "/refreash.svg"
-import filterIcon from "/filter.svg"
 import { useContext } from 'react'
 import { userContext } from '../context/usercontext'
 import { apiUrl, authFetch } from '../utils/api'
+import { useGrievanceAudio } from '../utils/useGrievanceAudio'
+import { useToast } from '../context/toastcontext'
+import { EmptyState, GuestPrompt, LoadingState } from './uiStates'
 import {
   Box,
   Paper,
@@ -27,48 +29,94 @@ import {
 
 
 const Grienvancelist = () => {
-  const { User } = useContext(userContext)
+  const { User, isLoggedIn } = useContext(userContext)
+  const { showToast } = useToast()
   const [grievances, setGrievances] = useState([])
   const [currGrie, setcurrGrie] = useState({})
   const [openDialog, setOpenDialog] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
 
   const get_all_grievance =  useCallback(async () => {
-    let res = await authFetch(apiUrl(`/api/grievances/get_all_grievance/${User.u_id}`), User.token)
-    if (res.ok) {
-      res = await res.json()
-      setGrievances(res)
+    if (!User.u_id) return;
+    setLoading(true);
+    try {
+      let res = await authFetch(apiUrl(`/api/grievances/get_all_grievance/${User.u_id}`), User.token)
+      if (res.ok) {
+        let data = await res.json()
+        setGrievances(data)
+      } else {
+        showToast("Failed to load grievances", "error")
+      }
+    } catch (error) {
+      showToast(error.message || "Failed to load grievances", "error")
+    } finally {
+      setLoading(false)
     }
-  }, [User.u_id, User.token])
+  }, [User.u_id, User.token, showToast])
 
   useEffect(() => {
     if (User.u_id) {
       get_all_grievance()
     }
-  }, [User, get_all_grievance])
+  }, [User.u_id, get_all_grievance])
+
+  const filteredGrievances = grievances.filter((grievance) => {
+    const matchesSearch = !searchQuery ||
+      grievance.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      grievance.desc?.toLowerCase().includes(searchQuery.toLowerCase());
+    const status = String(grievance.status || '').toLowerCase();
+    const matchesStatus = statusFilter === 'all' || status.includes(statusFilter);
+    return matchesSearch && matchesStatus;
+  });
 
   return (
-    <div className='grievance-list-cont bg-white'>
+    <div className='grievance-list-cont'>
       <div className='grie-list-header'>
         <div>
-          <div className='list-filter'>
-            <img src={filterIcon} alt="" />
-            <p> Filter </p>
-          </div>
+          <select
+            className='list-filter'
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
           <div>
-            <div className='list-refresh'>
-              <img src={refreshIcon} alt="" />
+            <button className='list-refresh' type="button" onClick={get_all_grievance} disabled={!isLoggedIn || loading}>
+              <img src={refreshIcon} alt="" className={loading ? 'spinning' : ''} />
               <p> Refresh </p>
-            </div>
+            </button>
             <div className='list-search'>
-              <input type="search" id="" placeholder='Search Here' className='header-search-input' />
+              <input
+                type="search"
+                placeholder='Search grievances'
+                className='header-search-input'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </div>
       </div>
       <div className='grie-card-cont'>
-        {grievances.map((grievance) => {
-          return <GrievanceCard key={grievance.id} grievance={grievance} setOpenDialog={setOpenDialog} setcurrGrie={setcurrGrie}/>
-        })}
+        {!isLoggedIn ? (
+          <GuestPrompt description="Sign in to view and track your submitted grievances." />
+        ) : loading ? (
+          <LoadingState label="Loading your grievances..." />
+        ) : filteredGrievances.length === 0 ? (
+          <EmptyState
+            title={grievances.length === 0 ? "No grievances yet" : "No matching grievances"}
+            description={grievances.length === 0 ? "Submit your first grievance to get started." : "Try a different search or filter."}
+          />
+        ) : (
+          filteredGrievances.map((grievance) => (
+            <GrievanceCard key={grievance.id} grievance={grievance} setOpenDialog={setOpenDialog} setcurrGrie={setcurrGrie}/>
+          ))
+        )}
       </div>
       <GrievanceDialog
         open={openDialog}
@@ -83,26 +131,12 @@ export default Grienvancelist;
 
 
 const GrievanceDialog = ({ open, onClose, grievance }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio] = useState(new Audio(grievance?.audioUrl));
   const { User } = useContext(userContext)
-
-  const handlePlayPause = () => {
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      audio.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  useEffect(() => {
-    audio.addEventListener('ended', () => setIsPlaying(false));
-    return () => {
-      audio.removeEventListener('ended', () => setIsPlaying(false));
-      audio.pause();
-    };
-  }, [audio]);
+  const { isPlaying, hasAudio, loading: audioLoading, togglePlay } = useGrievanceAudio({
+    grievanceId: grievance?.id,
+    token: User.token,
+    enabled: open,
+  });
 
   if (!grievance) return null;
 
@@ -122,7 +156,7 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
       fullWidth
     >
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">Grievance Details</Typography>
+        <Typography variant="h6" component="span">Grievance Details</Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
@@ -180,11 +214,12 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
               }}
             >
               <IconButton
-                onClick={handlePlayPause}
+                onClick={togglePlay}
+                disabled={!hasAudio || audioLoading}
                 sx={{
-                  bgcolor: 'primary.main',
+                  bgcolor: hasAudio ? 'primary.main' : 'grey.400',
                   color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' }
+                  '&:hover': { bgcolor: hasAudio ? 'primary.dark' : 'grey.400' }
                 }}
               >
                 {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
@@ -194,7 +229,11 @@ const GrievanceDialog = ({ open, onClose, grievance }) => {
                   Audio Recording
                 </Typography>
                 <Typography variant="body2">
-                  Click to {isPlaying ? 'pause' : 'play'} the grievance audio
+                  {audioLoading
+                    ? 'Loading audio...'
+                    : hasAudio
+                      ? `Click to ${isPlaying ? 'pause' : 'play'} the grievance audio`
+                      : 'No audio recording for this grievance'}
                 </Typography>
               </Box>
             </Paper>

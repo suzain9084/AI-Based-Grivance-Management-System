@@ -10,6 +10,8 @@ import InputLabel from '@mui/material/InputLabel';
 import { userContext } from '../context/usercontext';
 import { useNavigate } from 'react-router-dom';
 import { apiUrl, authFetch } from '../utils/api';
+import { useToast } from '../context/toastcontext';
+import { GuestPrompt } from './uiStates';
 
 
 const NewGrievanceForm = () => {
@@ -17,6 +19,7 @@ const NewGrievanceForm = () => {
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('not_assign');
   const [isloading, setIsloading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [language, setlanguage] = useState("english")
 
   const [isRecording, setIsRecording] = useState(false);
@@ -27,30 +30,43 @@ const NewGrievanceForm = () => {
   const navigate = useNavigate()
   const audioBlobRef = useRef(null)
 
-  const { User } = useContext(userContext)
+  const { User, isLoggedIn } = useContext(userContext)
+  const { showToast } = useToast()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let formdata = new FormData()
-    formdata.append('title', title)
-    formdata.append("description", description)
-    formdata.append('blob', audioBlobRef.current)
-    formdata.append('comittee', assignedTo)
-    formdata.append('u_id', User.u_id)
-    formdata.append("language", language)
-    let res = await authFetch(apiUrl("/api/grievances/add_grievance"), User.token, {
-      method: "POST",
-      body: formdata
-    })
-    if (res.status == 200) {
-      alert("Grievance has been added")
-      navigate("/")
-    } else {
-      alert("There is some problem, try again after some time")
+    if (!title.trim() || !description.trim()) {
+      showToast("Please add a title and description", "warning");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      let formdata = new FormData()
+      formdata.append('title', title)
+      formdata.append("description", description)
+      formdata.append('blob', audioBlobRef.current)
+      formdata.append('comittee', assignedTo)
+      formdata.append('u_id', User.u_id)
+      formdata.append("language", language)
+      let res = await authFetch(apiUrl("/api/grievances/add_grievance"), User.token, {
+        method: "POST",
+        body: formdata
+      })
+      if (res.status == 200) {
+        showToast("Grievance has been added", "success")
+        navigate("/")
+      } else {
+        showToast("There is some problem, try again after some time", "error")
+      }
+    } catch (error) {
+      showToast(error.message || "Unable to submit grievance", "error")
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const startRecording = async () => {
+    try {
     setIsRecording(true)
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -84,15 +100,20 @@ const NewGrievanceForm = () => {
       if (res.status == 200) {
         res = await res.json()
         setDescription(res)
+        showToast("Audio transcribed successfully", "success")
       } else {
         res = await res.json()
-        setDescription(res.message)
+        showToast(res.message || "Could not transcribe audio", "error")
       }
       setIsloading(false)
     };
 
     recorder.start();
     setIsRecording(true);
+    } catch (error) {
+      setIsRecording(false);
+      showToast(error.message || "Microphone access is required to record", "error");
+    }
   };
 
   const stopRecording = () => {
@@ -113,6 +134,14 @@ const NewGrievanceForm = () => {
     return wavBlob;
   };
 
+
+  if (!isLoggedIn) {
+    return (
+      <div className='gri-cont-to-fit-in-page'>
+        <GuestPrompt description="Sign in to submit a new grievance." />
+      </div>
+    );
+  }
 
   return (
     <div className='gri-cont-to-fit-in-page'>
@@ -217,8 +246,8 @@ const NewGrievanceForm = () => {
 
           <button
             type="submit" className="submit-button"
-            onClick={handleSubmit}>
-            Submit Grievance
+            disabled={isSubmitting || isloading}>
+            {isSubmitting ? "Submitting..." : "Submit Grievance"}
           </button>
         </form>
       </div>

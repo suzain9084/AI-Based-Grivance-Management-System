@@ -13,49 +13,48 @@ import AdminDashboardepage from './page/admin_dashboard_page.jsx'
 import { userContext } from './context/usercontext.jsx'
 import { useContext } from 'react'
 
+function RolePage({ admin, user }) {
+  const { User } = useContext(userContext)
+  return User.isAdmin ? admin : user
+}
+
+const routes = createBrowserRouter([
+  {
+    path: "/login",
+    element: <LoginPage />
+  },
+  {
+    path: "/signup",
+    element: <LoginPage />
+  },
+  {
+    path: "/",
+    element: <RolePage admin={<AdminComplainPage />} user={<UserHomePage />} />
+  },
+  {
+    path: "/dashboard",
+    element: <RolePage admin={<AdminDashboardepage />} user={<Userdashboard />} />
+  },
+  {
+    path: "/about",
+    element: <div>hellllo</div>
+  },
+  {
+    path: "/profile",
+    element: <RolePage admin={<Adminprofile />} user={<Profilepage />} />
+  },
+  {
+    path: "/addGrievance",
+    element: <AddgrievancePage />
+  },
+  {
+    path: "/settings",
+    element: <SettingsPage />
+  },
+])
+
 function App() {
-  const {User} = useContext(userContext)
-
-  const routes = createBrowserRouter([
-    {
-      path: "/login",
-      element:  <LoginPage props={{login:true}}/>
-    },
-    {
-      path: "/signup",
-      element: <LoginPage props={{login: false}}/>
-    },
-    {
-      path: "/",
-      element: User.isAdmin ?  <AdminComplainPage/> : <UserHomePage/> 
-    },
-    {
-      path:"/dashboard",
-      element: User.isAdmin ?  <AdminDashboardepage/> : <Userdashboard/> 
-    },
-    {
-      path: "/about",
-      element: <div>hellllo</div>
-    },
-    {
-      path: "/profile",
-      element: User.isAdmin ?  <Adminprofile/> : <Profilepage/>
-    },
-    {
-      path: "/addGrievance",
-      element: <AddgrievancePage/>
-    },
-    {
-      path: "/settings",
-      element: <SettingsPage/>
-    },
-  ])
-
-  return (
-    <>
-      <RouterProvider router={routes}/>
-    </>
-  )
+  return <RouterProvider router={routes} />
 }
 
 export default App
